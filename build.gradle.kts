@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "me.shika"
-version = "1.0"
+version = "1.0.0"
 
 repositories {
     google()
@@ -55,7 +55,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "AlexBotOlex"
-            packageVersion = "1.0.0"
+            packageVersion = version.toString()
         }
     }
 }

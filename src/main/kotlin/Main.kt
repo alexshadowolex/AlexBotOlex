@@ -1,6 +1,9 @@
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.spotifyClientApi
@@ -40,7 +43,11 @@ fun main() = try {
             ).build()
         }
 
-        Window(onCloseRequest = ::exitApplication) {
+        Window(
+            state = WindowState(size = DpSize(400.dp, 200.dp)),
+            title = "AlexBotOlex",
+            onCloseRequest = ::exitApplication
+        ) {
             App()
         }
     }
@@ -83,11 +90,11 @@ private fun setupTwitchBot() {
     }
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
-        if (!messageEvent.message.startsWith("#")) {
+        if (!messageEvent.message.startsWith(BotConfig.commandPrefix)) {
             return@onEvent
         }
 
-        val parts = messageEvent.message.trimStart('#').split(" ")
+        val parts = messageEvent.message.substringAfter(BotConfig.commandPrefix).split(" ")
         val command = commands.find { parts.first() in it.names } ?: return@onEvent
 
         if (BotConfig.onlyMods && CommandPermission.MODERATOR in messageEvent.permissions) {

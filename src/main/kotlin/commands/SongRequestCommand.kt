@@ -26,7 +26,9 @@ val songRequestCommand = Command(
             BotConfig.channel,
             updateQueue(query)?.let { track ->
                 putUserOnCooldown = true
-                "Song '${track.name}' by ${track.artists.joinToString { it.name }} added to the playlist ${emotes.random()}"
+                "Song '${track.name}' by ${track.artists.map { "'${it.name}'" }.let { artists ->
+                    listOf(artists.dropLast(1).joinToString(), artists.last()).filter { it.isNotBlank() }.joinToString(" and ")}
+                } has been added to the playlist ${emotes.random()}"
             } ?: run {
                 putUserOnCooldown = false
                 "No track with query '$query' found."
@@ -50,10 +52,15 @@ suspend fun updateQueue(query: String): Track? {
         ).tracks?.firstOrNull()
     } ?: return null
 
-    httpClient.post<Unit>("https://api.spotify.com/v1/me/player/queue") {
-        url {
-            parameters.append("uri", result.uri.uri)
+    try {
+        httpClient.post<Unit>("https://api.spotify.com/v1/me/player/queue") {
+            url {
+                parameters.append("uri", result.uri.uri)
+            }
         }
+    } catch (e: Exception) {
+        println("WARNING: Spotify is probably not set up. Returning null...")
+        return null
     }
 
     return result

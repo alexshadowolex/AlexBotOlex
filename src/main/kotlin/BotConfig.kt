@@ -11,4 +11,5 @@ object BotConfig {
     val userCooldownSeconds = properties.getProperty("user_cooldown_seconds").toLong()
     val spotifyClientId = properties.getProperty("spotify_client_id")
     val spotifyClientSecret = properties.getProperty("spotify_client_secret")
+    val commandPrefix = properties.getProperty("command_prefix")
 }
