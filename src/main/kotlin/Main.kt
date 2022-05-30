@@ -16,20 +16,6 @@ import java.time.Instant
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
 
-@Composable
-@Preview
-fun App() {
-    var text by remember { mutableStateOf("Hello, World!") }
-
-    MaterialTheme {
-        Button(onClick = {
-            text = "Hello, Desktop!"
-        }) {
-            Text(text)
-        }
-    }
-}
-
 fun main() = try {
     application {
         val coroutineScope = rememberCoroutineScope()
@@ -86,7 +72,8 @@ private fun setupTwitchBot() {
         }
 
         val commandHandlerScope = CommandHandlerScope(
-            chat = twitchClient.chat
+            chat = twitchClient.chat,
+            user = messageEvent.user
         )
 
         command.handler(commandHandlerScope, parts.drop(1))
