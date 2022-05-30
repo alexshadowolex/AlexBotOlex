@@ -1,9 +1,12 @@
+
 import com.github.twitch4j.chat.TwitchChat
 import com.github.twitch4j.common.events.domain.EventUser
+import commands.helpCommand
+import commands.songRequestCommand
 
 data class Command(
-    val name: String,
-    val handler: CommandHandlerScope.(arguments: List<String>) -> Unit
+    val names: List<String>,
+    val handler: suspend CommandHandlerScope.(arguments: List<String>) -> Unit
 )
 
 data class CommandHandlerScope(
@@ -12,14 +15,7 @@ data class CommandHandlerScope(
     var putUserOnCooldown: Boolean = false
 )
 
-val commands = selfReferencing<List<Command>> {
-    listOf(
-        Command(
-            name = "help",
-            handler = {
-                chat.sendMessage(BotConfig.channel, "Available commands: ${this@selfReferencing().joinToString(", ") { "#${it.name}" }}.")
-                text += "\nCommand \"${this@selfReferencing()[0].name}\" used by $user"
-            }
-        ),
-    )
-}
+val commands = listOf(
+    helpCommand,
+    songRequestCommand,
+)

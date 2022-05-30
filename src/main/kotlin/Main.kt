@@ -1,14 +1,25 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
+
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.adamratzman.spotify.SpotifyClientApi
+import com.adamratzman.spotify.spotifyClientApi
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.features.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.logging.*
+import io.ktor.client.request.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -18,10 +29,15 @@ import kotlin.system.exitProcess
 
 fun main() = try {
     application {
-        val coroutineScope = rememberCoroutineScope()
-
         LaunchedEffect(Unit) {
             setupTwitchBot()
+
+            api = spotifyClientApi(
+                clientId = BotConfig.spotifyClientId,
+                clientSecret = BotConfig.spotifyClientSecret,
+                redirectUri = "https://www.example.com",
+                token = Json.decodeFromString(File("data/spotifytoken.json").readText())
+            ).build()
         }
 
         Window(onCloseRequest = ::exitApplication) {
@@ -33,8 +49,24 @@ fun main() = try {
     exitProcess(0)
 }
 
+lateinit var api: SpotifyClientApi
+
+val httpClient = HttpClient(CIO) {
+    install(Logging)
+
+    install(JsonFeature) {
+        serializer = KotlinxSerializer(Json)
+    }
+
+    defaultRequest {
+        header("Authorization", "Bearer ${api.token.accessToken}")
+    }
+}
+
+val commandHandlerCoroutineScope = CoroutineScope(Dispatchers.IO)
+
 private fun setupTwitchBot() {
-    val chatAccountToken = File("data/bot.token").readText()
+    val chatAccountToken = File("data/twitchtoken.txt").readText()
 
     val twitchClient = TwitchClientBuilder.builder()
         .withEnableHelix(true)
@@ -56,7 +88,7 @@ private fun setupTwitchBot() {
         }
 
         val parts = messageEvent.message.trimStart('#').split(" ")
-        val command = commands.find { it.name == parts.first() } ?: return@onEvent
+        val command = commands.find { parts.first() in it.names } ?: return@onEvent
 
         if (BotConfig.onlyMods && CommandPermission.MODERATOR in messageEvent.permissions) {
             twitchClient.chat.sendMessage(BotConfig.channel, "You do not have the required permissions to use this command.")
@@ -76,10 +108,12 @@ private fun setupTwitchBot() {
             user = messageEvent.user
         )
 
-        command.handler(commandHandlerScope, parts.drop(1))
+        commandHandlerCoroutineScope.launch {
+            command.handler(commandHandlerScope, parts.drop(1))
 
-        if (commandHandlerScope.putUserOnCooldown) {
-            lastCommandUsagePerUser[messageEvent.user.name] = Instant.now()
+            if (commandHandlerScope.putUserOnCooldown) {
+                lastCommandUsagePerUser[messageEvent.user.name] = Instant.now()
+            }
         }
     }
 }
