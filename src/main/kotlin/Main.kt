@@ -1,4 +1,5 @@
 
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -8,6 +9,7 @@ import androidx.compose.ui.window.application
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.spotifyClientApi
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
+import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
@@ -32,10 +34,16 @@ import kotlin.system.exitProcess
 
 fun main() = try {
     application {
-        LaunchedEffect(Unit) {
-            setupTwitchBot()
+        DisposableEffect(Unit) {
+            val twitchClient = setupTwitchBot()
 
-            api = spotifyClientApi(
+            onDispose {
+                twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            spotifyClient = spotifyClientApi(
                 clientId = BotConfig.spotifyClientId,
                 clientSecret = BotConfig.spotifyClientSecret,
                 redirectUri = "https://www.example.com",
@@ -56,7 +64,7 @@ fun main() = try {
     exitProcess(0)
 }
 
-lateinit var api: SpotifyClientApi
+lateinit var spotifyClient: SpotifyClientApi
 
 val httpClient = HttpClient(CIO) {
     install(Logging)
@@ -66,13 +74,13 @@ val httpClient = HttpClient(CIO) {
     }
 
     defaultRequest {
-        header("Authorization", "Bearer ${api.token.accessToken}")
+        header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
     }
 }
 
 val commandHandlerCoroutineScope = CoroutineScope(Dispatchers.IO)
 
-private fun setupTwitchBot() {
+private fun setupTwitchBot(): TwitchClient {
     val chatAccountToken = File("data/twitchtoken.txt").readText()
 
     val twitchClient = TwitchClientBuilder.builder()
@@ -86,7 +94,7 @@ private fun setupTwitchBot() {
     twitchClient.chat.run {
         connect()
         joinChannel(BotConfig.channel)
-        sendMessage(BotConfig.channel, "Bot running.")
+        sendMessage(BotConfig.channel, "Bot running peepoArrive")
     }
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
@@ -98,15 +106,28 @@ private fun setupTwitchBot() {
         val command = commands.find { parts.first() in it.names } ?: return@onEvent
 
         if (BotConfig.onlyMods && CommandPermission.MODERATOR in messageEvent.permissions) {
-            twitchClient.chat.sendMessage(BotConfig.channel, "You do not have the required permissions to use this command.")
+            twitchClient.chat.sendMessage(
+                BotConfig.channel,
+                "You do not have the required permissions to use this command."
+            )
             return@onEvent
         }
 
-        val lastCommandUsedInstant = lastCommandUsagePerUser.getOrPut(messageEvent.user.name) { Instant.now().minusSeconds(BotConfig.userCooldownSeconds) }
+        val lastCommandUsedInstant = lastCommandUsagePerUser.getOrPut(messageEvent.user.name) {
+            Instant.now().minusSeconds(BotConfig.userCooldownSeconds)
+        }
 
-        if (Instant.now().isBefore(lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)) && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            val secondsUntilTimeoutOver = java.time.Duration.between(Instant.now(), lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)).seconds
-            twitchClient.chat.sendMessage(BotConfig.channel, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds.")
+        if (Instant.now()
+                .isBefore(lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)) && CommandPermission.MODERATOR !in messageEvent.permissions
+        ) {
+            val secondsUntilTimeoutOver = java.time.Duration.between(
+                Instant.now(),
+                lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)
+            ).seconds
+            twitchClient.chat.sendMessage(
+                BotConfig.channel,
+                "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
+            )
             return@onEvent
         }
 
@@ -123,4 +144,6 @@ private fun setupTwitchBot() {
             }
         }
     }
+
+    return twitchClient
 }

@@ -2,7 +2,7 @@ package commands
 
 import BotConfig
 import Command
-import api
+import spotifyClient
 import com.adamratzman.spotify.endpoints.pub.SearchApi
 import com.adamratzman.spotify.models.Track
 import com.adamratzman.spotify.utils.Market
@@ -39,9 +39,9 @@ val songRequestCommand = Command(
 
 suspend fun updateQueue(query: String): Track? {
     val result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
-        api.tracks.getTrack(it.encodedPath.substringAfter("/track/"))
+        spotifyClient.tracks.getTrack(it.encodedPath.substringAfter("/track/"))
     } ?: run {
-        api.search.search(
+        spotifyClient.search.search(
             query = query,
             searchTypes = arrayOf(
                 SearchApi.SearchType.ARTIST,
