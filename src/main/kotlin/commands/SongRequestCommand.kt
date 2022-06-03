@@ -2,21 +2,23 @@ package commands
 
 import BotConfig
 import Command
-import spotifyClient
 import com.adamratzman.spotify.endpoints.pub.SearchApi
 import com.adamratzman.spotify.models.Track
 import com.adamratzman.spotify.utils.Market
+import debugLog
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
+import spotifyClient
 
-val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam")
+val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
 
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No song given.")
+            debugLog("INFO", "No Arguments given")
             return@Command
         }
 
@@ -52,14 +54,17 @@ suspend fun updateQueue(query: String): Track? {
         ).tracks?.firstOrNull()
     } ?: return null
 
+    debugLog("INFO", "Result after search: $result")
+
     try {
         httpClient.post<Unit>("https://api.spotify.com/v1/me/player/queue") {
             url {
                 parameters.append("uri", result.uri.uri)
             }
         }
+        debugLog("INFO", "Result uri: ${result.uri.uri}")
     } catch (e: Exception) {
-        println("WARNING: Spotify is probably not set up. Returning null...")
+        debugLog("ERROR", "Spotify is probably not set up. Returning null...")
         return null
     }
 
