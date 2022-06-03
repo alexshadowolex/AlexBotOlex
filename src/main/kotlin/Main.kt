@@ -44,6 +44,8 @@ fun main() = try {
 
             onDispose {
                 twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
+                debugLog("INFO", "App Ending")
+                out.close()
             }
         }
 
@@ -60,11 +62,7 @@ fun main() = try {
         Window(
             state = WindowState(size = DpSize(400.dp, 200.dp)),
             title = "AlexBotOlex",
-            onCloseRequest = {
-                debugLog("INFO", "App Ending")
-                out.close()
-                exitProcess(0)
-            }
+            onCloseRequest = ::exitApplication
         ) {
             App()
         }
