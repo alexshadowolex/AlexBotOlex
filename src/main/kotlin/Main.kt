@@ -28,59 +28,16 @@ import kotlinx.serialization.json.Json
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.time.Duration
 import java.time.Instant
+import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
-
-const val LOGDIRECTORY_NAME = "logs"
-const val LOGFILE_NAME = "$LOGDIRECTORY_NAME/AlexBotOlex.log"
-lateinit var out: PrintStream
-
-fun main() = try {
-    setupLogging()
-    application {
-        DisposableEffect(Unit) {
-            val twitchClient = setupTwitchBot()
-
-            onDispose {
-                twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
-            }
-        }
-
-        LaunchedEffect(Unit) {
-            spotifyClient = spotifyClientApi(
-                clientId = BotConfig.spotifyClientId,
-                clientSecret = BotConfig.spotifyClientSecret,
-                redirectUri = "https://www.example.com",
-                token = Json.decodeFromString(File("data/spotifytoken.json").readText())
-            ).build()
-            debugLog("INFO", "Spotify Client built")
-        }
-
-        Window(
-            state = WindowState(size = DpSize(400.dp, 200.dp)),
-            title = "AlexBotOlex",
-            onCloseRequest = {
-                debugLog("INFO", "App Ending")
-                out.close()
-                exitProcess(0)
-            }
-        ) {
-            App()
-        }
-        debugLog("INFO", "App Started")
-    }
-} catch (e: Throwable) {
-    JOptionPane.showMessageDialog(null, e.message + "\n" + StringWriter().also { e.printStackTrace(PrintWriter(it)) }, "InfoBox: File Debugger", JOptionPane.INFORMATION_MESSAGE);
-    debugLog("ERROR", e.message + "\n" + StringWriter().also { e.printStackTrace(PrintWriter(it)) })
-    out.close()
-    exitProcess(0)
-}
 
 lateinit var spotifyClient: SpotifyClientApi
 
 val httpClient = HttpClient(CIO) {
-    install(Logging){
+    install(Logging) {
         logger = Logger.DEFAULT
         level = LogLevel.ALL
     }
@@ -95,6 +52,44 @@ val httpClient = HttpClient(CIO) {
 }
 
 val commandHandlerCoroutineScope = CoroutineScope(Dispatchers.IO)
+
+fun main() = try {
+    setupLogging()
+
+    application {
+        DisposableEffect(Unit) {
+            val twitchClient = setupTwitchBot()
+
+            onDispose {
+                twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
+                debugLog("INFO", "App Ending")
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            spotifyClient = spotifyClientApi(
+                clientId = BotConfig.spotifyClientId,
+                clientSecret = BotConfig.spotifyClientSecret,
+                redirectUri = "https://www.example.com",
+                token = Json.decodeFromString(File("data/spotifytoken.json").readText())
+            ).build()
+
+            debugLog("INFO", "Spotify Client built")
+        }
+
+        Window(
+            state = WindowState(size = DpSize(400.dp, 200.dp)),
+            title = "AlexBotOlex",
+            onCloseRequest = ::exitApplication
+        ) {
+            App()
+        }
+    }
+} catch (e: Throwable) {
+    JOptionPane.showMessageDialog(null, e.message + "\n" + StringWriter().also { e.printStackTrace(PrintWriter(it)) }, "InfoBox: File Debugger", JOptionPane.INFORMATION_MESSAGE)
+    debugLog("ERROR", e.message + "\n" + StringWriter().also { e.printStackTrace(PrintWriter(it)) })
+    exitProcess(0)
+}
 
 private fun setupTwitchBot(): TwitchClient {
     val chatAccountToken = File("data/twitchtoken.txt").readText()
@@ -129,6 +124,7 @@ private fun setupTwitchBot(): TwitchClient {
                 "You do not have the required permissions to use this command."
             )
             debugLog("INFO", "User ${messageEvent.user} has no permission to call $command")
+
             return@onEvent
         }
 
@@ -136,18 +132,18 @@ private fun setupTwitchBot(): TwitchClient {
             Instant.now().minusSeconds(BotConfig.userCooldownSeconds)
         }
 
-        if (Instant.now()
-                .isBefore(lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)) && CommandPermission.MODERATOR !in messageEvent.permissions
-        ) {
-            val secondsUntilTimeoutOver = java.time.Duration.between(
+        if (Instant.now().isBefore(lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)) && CommandPermission.MODERATOR !in messageEvent.permissions) {
+            val secondsUntilTimeoutOver = Duration.between(
                 Instant.now(),
                 lastCommandUsedInstant.plusSeconds(BotConfig.userCooldownSeconds)
             ).seconds
+
             twitchClient.chat.sendMessage(
                 BotConfig.channel,
                 "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
             )
             debugLog("INFO", "User ${messageEvent.user} is still on cooldown")
+
             return@onEvent
         }
 
@@ -169,19 +165,26 @@ private fun setupTwitchBot(): TwitchClient {
     return twitchClient
 }
 
-fun setupLogging(){
-    val logFile = File(LOGFILE_NAME)
-    val logDirectory = File(LOGDIRECTORY_NAME)
-    if(!logDirectory.exists() || !logDirectory.isDirectory){
-        Files.createDirectory(Paths.get(LOGDIRECTORY_NAME))
+
+private const val LOG_DIRECTORY = "logs"
+
+fun setupLogging() {
+    Files.createDirectories(Paths.get(LOG_DIRECTORY))
+
+    val logFileName = DateTimeFormatterBuilder()
+        .appendInstant(0)
+        .toFormatter()
+        .format(Instant.now())
+        .replace(':', '-')
+
+    debugLog(Paths.get(LOG_DIRECTORY, "${logFileName}.log"))
+    val logFile = Paths.get(LOG_DIRECTORY, "${logFileName}.log").toFile().also {
+        if (!it.exists()) {
+            it.createNewFile()
+        }
     }
-    val fileNewlyCreated = !logFile.exists()
-    if(fileNewlyCreated){
-        logFile.createNewFile()
-    }
-    out = PrintStream(FileOutputStream(LOGFILE_NAME))
-    if(fileNewlyCreated) {
-        debugLog("INFO", "Log file ${logFile.name} has been created")
-    }
-    debugLog("INFO", "Logging has been set up")
+
+    debugLog("INFO", "Log file '${logFile.name}' has been created")
+
+    System.setOut(PrintStream(MultiOutputStream(System.out, FileOutputStream(logFile))))
 }
