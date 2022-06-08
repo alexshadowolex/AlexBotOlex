@@ -9,7 +9,7 @@ object BotConfig {
     val channel: String = properties.getProperty("channel")
     val onlyMods = properties.getProperty("only_mods") == "true"
     val userCooldownSeconds = properties.getProperty("user_cooldown_seconds").toLong()
-    val spotifyClientId = properties.getProperty("spotify_client_id")
-    val spotifyClientSecret = properties.getProperty("spotify_client_secret")
-    val commandPrefix = properties.getProperty("command_prefix")
+    val spotifyClientId: String = properties.getProperty("spotify_client_id")
+    val spotifyClientSecret: String = properties.getProperty("spotify_client_secret")
+    val commandPrefix: String = properties.getProperty("command_prefix")
 }

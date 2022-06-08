@@ -18,7 +18,7 @@ val songRequestCommand = Command(
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No song given.")
-            debugLog("INFO", "No Arguments given")
+            debugLog("INFO", "No arguments given")
             return@Command
         }
 
@@ -40,6 +40,10 @@ val songRequestCommand = Command(
 )
 
 suspend fun updateQueue(query: String): Track? {
+    if (!spotifyClient.isTokenValid().isValid) {
+        spotifyClient.refreshToken()
+    }
+
     val result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
         spotifyClient.tracks.getTrack(it.encodedPath.substringAfter("/track/"))
     } ?: run {
@@ -62,7 +66,7 @@ suspend fun updateQueue(query: String): Track? {
                 parameters.append("uri", result.uri.uri)
             }
         }
-        debugLog("INFO", "Result uri: ${result.uri.uri}")
+        debugLog("INFO", "Result URI: ${result.uri.uri}")
     } catch (e: Exception) {
         debugLog("ERROR", "Spotify is probably not set up. Returning null...")
         return null

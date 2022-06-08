@@ -1,3 +1,4 @@
+import java.io.OutputStream
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -12,14 +13,28 @@ class SelfReference<T>(initializer: SelfReference<T>.() -> T)  {
 
 fun <T : Any> selfReferencing(initializer: SelfReference<T>.() -> T): T = SelfReference(initializer)()
 
-fun debugLog(vararg arguments: Any?) {
-    val message = "[${
+fun debugLog(vararg arguments: Any?) = println("[${
         ZonedDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"))
     }, ${
         Throwable().stackTrace[1].let { "${it.className.substringAfterLast('.')}#${it.methodName}@L${it.lineNumber}" }
     }] ${
         arguments.joinToString(" | ") { it.toString() }
     }"
-    println(message)
-    out.println(message)
+)
+
+class MultiOutputStream(private vararg val streams: OutputStream) : OutputStream() {
+    override fun close() = streams.forEach(OutputStream::close)
+    override fun flush() = streams.forEach(OutputStream::flush)
+
+    override fun write(b: Int) = streams.forEach {
+        it.write(b)
+    }
+
+    override fun write(b: ByteArray) = streams.forEach {
+        it.write(b)
+    }
+
+    override fun write(b: ByteArray, off: Int, len: Int) = streams.forEach {
+        it.write(b, off, len)
+    }
 }
