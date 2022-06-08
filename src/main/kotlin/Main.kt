@@ -1,4 +1,3 @@
-
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.DpSize
@@ -20,9 +19,16 @@ import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.utils.io.jvm.javaio.*
+import javazoom.jl.player.Player
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -35,7 +41,7 @@ import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
 
-val logger = LoggerFactory.getLogger("Bot")
+val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
 
 lateinit var spotifyClient: SpotifyClientApi
 
@@ -47,10 +53,6 @@ val httpClient = HttpClient(CIO) {
 
     install(JsonFeature) {
         serializer = KotlinxSerializer(Json)
-    }
-
-    defaultRequest {
-        header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
     }
 }
 

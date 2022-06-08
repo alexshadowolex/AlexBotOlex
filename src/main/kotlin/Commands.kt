@@ -3,6 +3,7 @@ import com.github.twitch4j.chat.TwitchChat
 import com.github.twitch4j.common.events.domain.EventUser
 import commands.helpCommand
 import commands.songRequestCommand
+import commands.textToSpeechCommand
 
 data class Command(
     val names: List<String>,
@@ -18,4 +19,5 @@ data class CommandHandlerScope(
 val commands = listOf(
     helpCommand,
     songRequestCommand,
+    textToSpeechCommand,
 )

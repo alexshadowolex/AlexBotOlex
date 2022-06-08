@@ -30,6 +30,8 @@ dependencies {
     implementation("com.github.kwhat:jnativehook:2.2.2")
     implementation("com.github.twitch4j:twitch4j:1.9.0")
     implementation("com.adamratzman:spotify-api-kotlin-core:3.8.6")
+    implementation("javazoom:jlayer:1.0.1")
+
     /*implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
@@ -39,6 +41,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+
 
     implementation(kotlin("script-runtime"))
 }

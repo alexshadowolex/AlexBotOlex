@@ -11,14 +11,14 @@ import io.ktor.http.*
 import logger
 import spotifyClient
 
-val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
+private val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
 
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No song given.")
-            logger.info("No arguments given")
+            logger.warn("No arguments given")
             return@Command
         }
 
@@ -62,6 +62,8 @@ suspend fun updateQueue(query: String): Track? {
 
     try {
         httpClient.post<Unit>("https://api.spotify.com/v1/me/player/queue") {
+            header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
+
             url {
                 parameters.append("uri", result.uri.uri)
             }
