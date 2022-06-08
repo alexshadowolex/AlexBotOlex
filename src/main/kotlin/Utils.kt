@@ -1,3 +1,10 @@
+
+import androidx.compose.runtime.LaunchedEffect
+import com.adamratzman.spotify.SpotifyClientApi
+import com.adamratzman.spotify.spotifyClientApi
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -22,4 +29,19 @@ fun debugLog(vararg arguments: Any?) {
     }"
     println(message)
     out.println(message)
+}
+
+class SpotifyClientHandler(){
+    var spotifyClient: SpotifyClientApi? = null
+
+    fun buildSpotifyClient(){
+        LaunchedEffect(Unit) {
+            spotifyClient = spotifyClientApi(
+                clientId = BotConfig.spotifyClientId,
+                clientSecret = BotConfig.spotifyClientSecret,
+                redirectUri = "https://www.example.com",
+                token = Json.decodeFromString(File("data/spotifytoken.json").readText())
+            ).build()
+        }
+    }
 }

@@ -9,7 +9,7 @@ import debugLog
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
-import spotifyClient
+import spotifyClientHandler
 
 val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
 
@@ -41,9 +41,9 @@ val songRequestCommand = Command(
 
 suspend fun updateQueue(query: String): Track? {
     val result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
-        spotifyClient.tracks.getTrack(it.encodedPath.substringAfter("/track/"))
+        spotifyClientHandler.spotifyClient?.tracks?.getTrack(it.encodedPath.substringAfter("/track/"))
     } ?: run {
-        spotifyClient.search.search(
+        spotifyClientHandler.spotifyClient?.search?.search(
             query = query,
             searchTypes = arrayOf(
                 SearchApi.SearchType.ARTIST,
@@ -51,7 +51,7 @@ suspend fun updateQueue(query: String): Track? {
                 SearchApi.SearchType.TRACK
             ),
             market = Market.DE
-        ).tracks?.firstOrNull()
+        )?.tracks?.firstOrNull()
     } ?: return null
 
     debugLog("INFO", "Result after search: $result")

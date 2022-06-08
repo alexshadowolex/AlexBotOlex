@@ -1,13 +1,10 @@
 
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import com.adamratzman.spotify.SpotifyClientApi
-import com.adamratzman.spotify.spotifyClientApi
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.TwitchClientBuilder
@@ -23,7 +20,6 @@ import io.ktor.client.request.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.io.*
 import java.nio.file.Files
@@ -34,6 +30,7 @@ import kotlin.system.exitProcess
 
 const val LOGDIRECTORY_NAME = "logs"
 const val LOGFILE_NAME = "$LOGDIRECTORY_NAME/AlexBotOlex.log"
+val spotifyClientHandler: SpotifyClientHandler = SpotifyClientHandler()
 lateinit var out: PrintStream
 
 fun main() = try {
@@ -47,15 +44,8 @@ fun main() = try {
             }
         }
 
-        LaunchedEffect(Unit) {
-            spotifyClient = spotifyClientApi(
-                clientId = BotConfig.spotifyClientId,
-                clientSecret = BotConfig.spotifyClientSecret,
-                redirectUri = "https://www.example.com",
-                token = Json.decodeFromString(File("data/spotifytoken.json").readText())
-            ).build()
-            debugLog("INFO", "Spotify Client built")
-        }
+        spotifyClientHandler.buildSpotifyClient()
+        debugLog("INFO", "Spotify Client built")
 
         Window(
             state = WindowState(size = DpSize(400.dp, 200.dp)),
@@ -77,8 +67,6 @@ fun main() = try {
     exitProcess(0)
 }
 
-lateinit var spotifyClient: SpotifyClientApi
-
 val httpClient = HttpClient(CIO) {
     install(Logging){
         logger = Logger.DEFAULT
@@ -90,7 +78,7 @@ val httpClient = HttpClient(CIO) {
     }
 
     defaultRequest {
-        header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
+        header("Authorization", "Bearer ${spotifyClientHandler.spotifyClient?.token?.accessToken}")
     }
 }
 
