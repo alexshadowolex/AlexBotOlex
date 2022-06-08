@@ -13,6 +13,7 @@ class SelfReference<T>(initializer: SelfReference<T>.() -> T)  {
 
 fun <T : Any> selfReferencing(initializer: SelfReference<T>.() -> T): T = SelfReference(initializer)()
 
+@Suppress("UNUSED")
 fun debugLog(vararg arguments: Any?) = println("[${
         ZonedDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"))
     }, ${

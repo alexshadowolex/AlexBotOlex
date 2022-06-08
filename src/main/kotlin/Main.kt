@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -33,6 +34,8 @@ import java.time.Instant
 import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
+
+val logger = LoggerFactory.getLogger("Bot")
 
 lateinit var spotifyClient: SpotifyClientApi
 
@@ -62,7 +65,7 @@ fun main() = try {
 
             onDispose {
                 twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
-                debugLog("INFO", "App Ending")
+                logger.info("App Ending")
             }
         }
 
@@ -74,7 +77,7 @@ fun main() = try {
                 token = Json.decodeFromString(File("data/spotifytoken.json").readText())
             ).build()
 
-            debugLog("INFO", "Spotify Client built")
+            logger.info("Spotify Client built")
         }
 
         Window(
@@ -87,7 +90,7 @@ fun main() = try {
     }
 } catch (e: Throwable) {
     JOptionPane.showMessageDialog(null, e.message + "\n" + StringWriter().also { e.printStackTrace(PrintWriter(it)) }, "InfoBox: File Debugger", JOptionPane.INFORMATION_MESSAGE)
-    debugLog("ERROR", e.message + "\n" + StringWriter().also { e.printStackTrace(PrintWriter(it)) })
+    logger.error("Error while executing program.", e)
     exitProcess(0)
 }
 
@@ -116,14 +119,14 @@ private fun setupTwitchBot(): TwitchClient {
         val parts = messageEvent.message.substringAfter(BotConfig.commandPrefix).split(" ")
         val command = commands.find { parts.first() in it.names } ?: return@onEvent
 
-        debugLog("INFO", "Command called: ${command.names.joinToString() }} by ${messageEvent.user.name} with arguments: ${parts.drop(1).joinToString()}")
+        logger.info("Command called: ${command.names.joinToString() }} by ${messageEvent.user.name} with arguments: ${parts.drop(1).joinToString()}")
 
         if (BotConfig.onlyMods && CommandPermission.MODERATOR in messageEvent.permissions) {
             twitchClient.chat.sendMessage(
                 BotConfig.channel,
                 "You do not have the required permissions to use this command."
             )
-            debugLog("INFO", "User ${messageEvent.user} has no permission to call $command")
+            logger.info("User ${messageEvent.user} has no permission to call $command")
 
             return@onEvent
         }
@@ -142,7 +145,7 @@ private fun setupTwitchBot(): TwitchClient {
                 BotConfig.channel,
                 "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
             )
-            debugLog("INFO", "User ${messageEvent.user} is still on cooldown")
+            logger.info("User ${messageEvent.user} is still on cooldown")
 
             return@onEvent
         }
@@ -161,7 +164,7 @@ private fun setupTwitchBot(): TwitchClient {
         }
     }
 
-    debugLog("INFO", "Twitch Bot Started")
+    logger.info("Twitch Bot Started")
     return twitchClient
 }
 
@@ -177,14 +180,13 @@ fun setupLogging() {
         .format(Instant.now())
         .replace(':', '-')
 
-    debugLog(Paths.get(LOG_DIRECTORY, "${logFileName}.log"))
     val logFile = Paths.get(LOG_DIRECTORY, "${logFileName}.log").toFile().also {
         if (!it.exists()) {
             it.createNewFile()
         }
     }
 
-    debugLog("INFO", "Log file '${logFile.name}' has been created")
-
     System.setOut(PrintStream(MultiOutputStream(System.out, FileOutputStream(logFile))))
+
+    logger.info("Log file '${logFile.name}' has been created")
 }

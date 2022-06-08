@@ -33,3 +33,5 @@ build
 
 # data folder (should be secret)
 data
+
+logs
