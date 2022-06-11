@@ -1,3 +1,4 @@
+
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.DpSize
@@ -14,21 +15,12 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.utils.io.jvm.javaio.*
-import javazoom.jl.player.Player
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -38,7 +30,9 @@ import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.time.format.DateTimeFormatterBuilder
+import java.util.*
 import javax.swing.JOptionPane
+import kotlin.collections.set
 import kotlin.system.exitProcess
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
@@ -114,11 +108,12 @@ private fun setupTwitchBot(): TwitchClient {
     }
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
-        if (!messageEvent.message.startsWith(BotConfig.commandPrefix)) {
+        val message = messageEvent.message.lowercase(Locale.getDefault())
+        if (!message.startsWith(BotConfig.commandPrefix)) {
             return@onEvent
         }
 
-        val parts = messageEvent.message.substringAfter(BotConfig.commandPrefix).split(" ")
+        val parts = message.substringAfter(BotConfig.commandPrefix).split(" ")
         val command = commands.find { parts.first() in it.names } ?: return@onEvent
 
         logger.info("Command called: ${command.names.joinToString() }} by ${messageEvent.user.name} with arguments: ${parts.drop(1).joinToString()}")
