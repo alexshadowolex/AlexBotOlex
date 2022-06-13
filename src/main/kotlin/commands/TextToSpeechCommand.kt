@@ -26,6 +26,7 @@ private data class TtsResponse(
 
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
+    hasGlobalCooldown = true,
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No input provided.")
@@ -47,9 +48,10 @@ val textToSpeechCommand = Command(
                 )
             }.speakUrl
 
-            logger.info("Streamlabs returned URL '$url'...")
+            logger.info("Streamlabs returned URL '$url'")
 
             Player(httpClient.get<HttpResponse>(url).content.toInputStream().buffered()).play()
+            putCommandOnCooldown = true
         } catch (e: Exception) {
             chat.sendMessage(BotConfig.channel, "Unable to play TTS.")
             logger.error("Unable to play TTS.", e)

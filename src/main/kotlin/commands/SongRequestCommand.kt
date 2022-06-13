@@ -15,6 +15,7 @@ private val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "ba
 
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
+    hasGlobalCooldown = false,
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No song given.")
