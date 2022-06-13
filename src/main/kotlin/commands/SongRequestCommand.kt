@@ -47,25 +47,30 @@ suspend fun updateQueue(query: String): Track? {
     }
     logger.info(spotifyClient.token.accessToken)
 
-    val result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
-        val songID = it.encodedPath.substringAfter("/track/")
-        logger.info("Song ID from Link: $songID")
-        spotifyClient.tracks.getTrack(
-            track = songID,
-            market = Market.DE
-        )
-        //null
-    } ?: run {
-        spotifyClient.search.search(
-            query = query,
-            searchTypes = arrayOf(
-                SearchApi.SearchType.ARTIST,
-                SearchApi.SearchType.ALBUM,
-                SearchApi.SearchType.TRACK
-            ),
-            market = Market.DE
-        ).tracks?.firstOrNull()
-    } ?: return null
+    lateinit var result: Track
+    try {
+        result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
+            val songID = it.encodedPath.substringAfter("/track/")
+            logger.info("Song ID from Link: $songID")
+            spotifyClient.tracks.getTrack(
+                track = songID,
+                market = Market.DE
+            )
+        } ?: run {
+            spotifyClient.search.search(
+                query = query,
+                searchTypes = arrayOf(
+                    SearchApi.SearchType.ARTIST,
+                    SearchApi.SearchType.ALBUM,
+                    SearchApi.SearchType.TRACK
+                ),
+                market = Market.DE
+            ).tracks?.firstOrNull()
+        } ?: return null
+    } catch (e: Exception) {
+        logger.error("Spotify Search Request Exception Caught:")
+        e.printStackTrace()
+    }
 
     logger.info("Result after search: $result")
 
