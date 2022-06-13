@@ -1,5 +1,6 @@
 package commands
 
+import BotConfig
 import Command
 import httpClient
 import io.ktor.client.request.*
@@ -49,8 +50,6 @@ val textToSpeechCommand = Command(
             logger.info("Streamlabs returned URL '$url'...")
 
             Player(httpClient.get<HttpResponse>(url).content.toInputStream().buffered()).play()
-
-            chat.sendMessage(BotConfig.channel, "Playing TTS...")
         } catch (e: Exception) {
             chat.sendMessage(BotConfig.channel, "Unable to play TTS.")
             logger.error("Unable to play TTS.", e)

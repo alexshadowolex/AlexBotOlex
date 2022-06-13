@@ -30,7 +30,6 @@ import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.time.format.DateTimeFormatterBuilder
-import java.util.*
 import javax.swing.JOptionPane
 import kotlin.collections.set
 import kotlin.system.exitProcess
@@ -71,7 +70,10 @@ fun main() = try {
                 clientSecret = BotConfig.spotifyClientSecret,
                 redirectUri = "https://www.example.com",
                 token = Json.decodeFromString(File("data/spotifytoken.json").readText())
-            ).build()
+            ).apply {
+                options.enableDebugMode = true
+                options.enableLogger = true
+            }.build()
 
             logger.info("Spotify Client built")
         }
@@ -108,13 +110,13 @@ private fun setupTwitchBot(): TwitchClient {
     }
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
-        val message = messageEvent.message.lowercase(Locale.getDefault())
+        val message = messageEvent.message
         if (!message.startsWith(BotConfig.commandPrefix)) {
             return@onEvent
         }
 
         val parts = message.substringAfter(BotConfig.commandPrefix).split(" ")
-        val command = commands.find { parts.first() in it.names } ?: return@onEvent
+        val command = commands.find { parts.first().lowercase() in it.names } ?: return@onEvent
 
         logger.info("Command called: ${command.names.joinToString() }} by ${messageEvent.user.name} with arguments: ${parts.drop(1).joinToString()}")
 

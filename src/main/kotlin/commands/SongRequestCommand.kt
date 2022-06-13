@@ -41,11 +41,19 @@ val songRequestCommand = Command(
 
 suspend fun updateQueue(query: String): Track? {
     if (!spotifyClient.isTokenValid().isValid) {
+        logger.info("Token has been refreshed")
         spotifyClient.refreshToken()
     }
+    logger.info(spotifyClient.token.accessToken)
 
     val result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
-        spotifyClient.tracks.getTrack(it.encodedPath.substringAfter("/track/"))
+        val songID = it.encodedPath.substringAfter("/track/")
+        logger.info("Song ID from Link: $songID")
+        spotifyClient.tracks.getTrack(
+            track = songID,
+            market = Market.DE
+        )
+        //null
     } ?: run {
         spotifyClient.search.search(
             query = query,
