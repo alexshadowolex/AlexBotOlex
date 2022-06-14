@@ -10,6 +10,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import logger
 import spotifyClient
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
 
 private val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
@@ -42,14 +44,18 @@ val songRequestCommand = Command(
 suspend fun updateQueue(query: String): Track? {
     if (!spotifyClient.isTokenValid().isValid) {
         logger.debug("Refreshing Spotify token...")
+        logger.debug("Current token: '${spotifyClient.token.accessToken}'")
+
         spotifyClient.refreshToken()
+
+        logger.debug("New token: '${spotifyClient.token.accessToken}', expires at: ${DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(spotifyClient.token.expiresAt))}")
         logger.info("Token has been refreshed.")
     }
 
     val result = try {
         Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
             val songId = it.encodedPath.substringAfter("/track/")
-            logger.info("Song ID from Link: $songId")
+            logger.info("Song ID from link: $songId")
             spotifyClient.tracks.getTrack(
                 track = songId,
                 market = Market.DE

@@ -33,7 +33,7 @@ val textToSpeechCommand = Command(
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No input provided.")
-            logger.info("No TTS input provided")
+            logger.info("No TTS input provided.")
             return@Command
         }
 
@@ -51,7 +51,7 @@ val textToSpeechCommand = Command(
                 )
             }.speakUrl
 
-            logger.info("Streamlabs returned URL '$url'")
+            logger.info("Streamlabs returned URL '$url'.")
 
             withContext(Dispatchers.IO) {
                 val ttsDataInputStream = httpClient.get<HttpResponse>(url).content.toInputStream().buffered()
@@ -61,10 +61,9 @@ val textToSpeechCommand = Command(
 
                 Player(ttsDataInputStream).play()
             }
-
         } catch (e: Exception) {
             chat.sendMessage(BotConfig.channel, "Unable to play TTS.")
-            logger.error("Unable to play TTS.", e)
+            logger.error("Unable to play TTS:", e)
         }
     }
 )

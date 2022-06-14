@@ -61,7 +61,7 @@ fun main() = try {
 
             onDispose {
                 twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
-                logger.info("App Ending")
+                logger.info("App shutting down...")
             }
         }
 
@@ -76,7 +76,7 @@ fun main() = try {
                 options.enableLogger = true
             }.build()
 
-            logger.info("Spotify Client built")
+            logger.info("Spotify client built successfully.")
         }
 
         Window(
@@ -119,17 +119,17 @@ private fun setupTwitchBot(): TwitchClient {
         val parts = message.substringAfter(BotConfig.commandPrefix).split(" ")
         val command = commands.find { parts.first().lowercase() in it.names } ?: return@onEvent
 
-        logger.info("Command called: ${command.names.joinToString() }} by ${messageEvent.user.name} with arguments: ${parts.drop(1).joinToString()}")
-
         if (BotConfig.onlyMods && CommandPermission.MODERATOR in messageEvent.permissions) {
             twitchClient.chat.sendMessage(
                 BotConfig.channel,
                 "You do not have the required permissions to use this command."
             )
-            logger.info("User ${messageEvent.user} has no permission to call $command")
+            logger.info("User '${messageEvent.user}' does not have the necessary permissions to call command '${command.names.first()}'")
 
             return@onEvent
         }
+
+        logger.info("User '${messageEvent.user.name}' tried using command '${command.names.first()}' with arguments: ${parts.drop(1).joinToString()}")
 
         val nextAllowCommandUsageInstant = nextAllowCommandUsageInstantPerUser.getOrPut(command to messageEvent.user.name) {
             Instant.now()
@@ -142,7 +142,7 @@ private fun setupTwitchBot(): TwitchClient {
                 BotConfig.channel,
                 "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
             )
-            logger.info("User ${messageEvent.user} is still on cooldown")
+            logger.info("Unable to execute command due to ongoing cooldown.")
 
             return@onEvent
         }
@@ -158,7 +158,7 @@ private fun setupTwitchBot(): TwitchClient {
         }
     }
 
-    logger.info("Twitch Bot Started")
+    logger.info("Twitch client started.")
     return twitchClient
 }
 
@@ -182,5 +182,5 @@ fun setupLogging() {
 
     System.setOut(PrintStream(MultiOutputStream(System.out, FileOutputStream(logFile))))
 
-    logger.info("Log file '${logFile.name}' has been created")
+    logger.info("Log file '${logFile.name}' has been created.")
 }
