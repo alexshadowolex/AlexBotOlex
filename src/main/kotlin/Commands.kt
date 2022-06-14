@@ -7,7 +7,6 @@ import commands.textToSpeechCommand
 
 data class Command(
     val names: List<String>,
-    val hasGlobalCooldown: Boolean,
     val handler: suspend CommandHandlerScope.(arguments: List<String>) -> Unit
 )
 

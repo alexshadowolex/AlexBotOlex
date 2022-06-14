@@ -15,7 +15,6 @@ private val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "ba
 
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
-    hasGlobalCooldown = false,
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No song given.")
@@ -47,9 +46,8 @@ suspend fun updateQueue(query: String): Track? {
     }
     logger.info(spotifyClient.token.accessToken)
 
-    lateinit var result: Track
-    try {
-        result = Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
+    val result = try {
+        Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
             val songID = it.encodedPath.substringAfter("/track/")
             logger.info("Song ID from Link: $songID")
             spotifyClient.tracks.getTrack(
@@ -68,8 +66,8 @@ suspend fun updateQueue(query: String): Track? {
             ).tracks?.firstOrNull()
         } ?: return null
     } catch (e: Exception) {
-        logger.error("Spotify Search Request Exception Caught:")
-        e.printStackTrace()
+        logger.error("Error while searching for track:", e)
+        return null
     }
 
     logger.info("Result after search: $result")

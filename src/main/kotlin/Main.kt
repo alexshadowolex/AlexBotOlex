@@ -102,7 +102,7 @@ private fun setupTwitchBot(): TwitchClient {
         .build()
 
     val lastCommandUsagePerUser = mutableMapOf<String, Instant>()
-    val lastCommandUsage = mutableMapOf<String, Instant>()
+    val lastCommandUsage = mutableMapOf<Command, Instant>()
 
     twitchClient.chat.run {
         connect()
@@ -135,11 +135,11 @@ private fun setupTwitchBot(): TwitchClient {
             Instant.now().minusSeconds(BotConfig.userCooldownSeconds)
         }
 
-        val lastGlobalCommandUsage = lastCommandUsage.getOrPut(command.names.first()) {
+        val lastGlobalCommandUsage = lastCommandUsage.getOrPut(command) {
             Instant.now().minusSeconds(BotConfig.globalCommandCooldownSeconds)
         }
 
-        if (Instant.now().isBefore(lastGlobalCommandUsage.plusSeconds(BotConfig.globalCommandCooldownSeconds)) && command.hasGlobalCooldown && CommandPermission.BROADCASTER !in messageEvent.permissions) {
+        if (Instant.now().isBefore(lastGlobalCommandUsage.plusSeconds(BotConfig.globalCommandCooldownSeconds)) && CommandPermission.BROADCASTER !in messageEvent.permissions) {
             val secondsUntilTimeoutOver = Duration.between(
                 Instant.now(),
                 lastGlobalCommandUsage.plusSeconds(BotConfig.globalCommandCooldownSeconds)
@@ -149,7 +149,7 @@ private fun setupTwitchBot(): TwitchClient {
                 BotConfig.channel,
                 "Command is still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
             )
-            logger.info("Command ${command.names.first()} is still on cooldown")
+            logger.info("Command ${parts.first().lowercase()} is still on cooldown")
 
             return@onEvent
         }
@@ -182,7 +182,7 @@ private fun setupTwitchBot(): TwitchClient {
             }
 
             if (commandHandlerScope.putCommandOnCooldown) {
-                lastCommandUsage[command.names.first()] = Instant.now()
+                lastCommandUsage[command] = Instant.now()
             }
         }
     }

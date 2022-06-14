@@ -10,7 +10,7 @@ Before executing the program, you need a folder "data" on the same level as the 
   * channel=<channel_name>
   * only_mods=<true/false>
   * user_cooldown_seconds=<cooldown in seconds for a user after using a command>
-  * globa_command_cooldown_seconds=<cooldown in seconds for command after usage>
+  * global_command_cooldown_seconds=<cooldown in seconds for command after usage>
   * spotify_client_id=<spotify client id>
   * spotify_client_secret=<spotify client secret>
   * command_prefix=<prefix for commands>

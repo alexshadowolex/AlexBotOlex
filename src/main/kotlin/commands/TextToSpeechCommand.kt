@@ -26,7 +26,6 @@ private data class TtsResponse(
 
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
-    hasGlobalCooldown = true,
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(BotConfig.channel, "No input provided.")
