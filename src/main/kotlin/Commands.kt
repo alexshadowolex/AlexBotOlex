@@ -4,6 +4,7 @@ import com.github.twitch4j.common.events.domain.EventUser
 import commands.helpCommand
 import commands.songRequestCommand
 import commands.textToSpeechCommand
+import kotlin.time.Duration
 
 data class Command(
     val names: List<String>,
@@ -13,8 +14,7 @@ data class Command(
 data class CommandHandlerScope(
     val chat: TwitchChat,
     val user: EventUser,
-    var putUserOnCooldown: Boolean = false,
-    var putCommandOnCooldown: Boolean = false,
+    var addedUserCooldown: Duration = Duration.ZERO,
 )
 
 val commands = listOf(

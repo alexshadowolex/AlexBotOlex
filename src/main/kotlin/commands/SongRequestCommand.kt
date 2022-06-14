@@ -10,6 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import logger
 import spotifyClient
+import kotlin.time.Duration.Companion.seconds
 
 private val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
 
@@ -27,12 +28,11 @@ val songRequestCommand = Command(
         chat.sendMessage(
             BotConfig.channel,
             updateQueue(query)?.let { track ->
-                putUserOnCooldown = true
+                addedUserCooldown = 30.seconds
                 "Song '${track.name}' by ${track.artists.map { "'${it.name}'" }.let { artists ->
                     listOf(artists.dropLast(1).joinToString(), artists.last()).filter { it.isNotBlank() }.joinToString(" and ")}
                 } has been added to the playlist ${emotes.random()}"
             } ?: run {
-                putUserOnCooldown = false
                 "No track with query '$query' found."
             }
         )
@@ -41,17 +41,17 @@ val songRequestCommand = Command(
 
 suspend fun updateQueue(query: String): Track? {
     if (!spotifyClient.isTokenValid().isValid) {
-        logger.info("Token has been refreshed")
+        logger.debug("Refreshing Spotify token...")
         spotifyClient.refreshToken()
+        logger.info("Token has been refreshed.")
     }
-    logger.info(spotifyClient.token.accessToken)
 
     val result = try {
         Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
-            val songID = it.encodedPath.substringAfter("/track/")
-            logger.info("Song ID from Link: $songID")
+            val songId = it.encodedPath.substringAfter("/track/")
+            logger.info("Song ID from Link: $songId")
             spotifyClient.tracks.getTrack(
-                track = songID,
+                track = songId,
                 market = Market.DE
             )
         } ?: run {

@@ -33,6 +33,7 @@ import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.collections.set
 import kotlin.system.exitProcess
+import kotlin.time.toJavaDuration
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
 
@@ -101,8 +102,7 @@ private fun setupTwitchBot(): TwitchClient {
         .withChatAccount(OAuth2Credential("twitch", chatAccountToken))
         .build()
 
-    val lastCommandUsagePerUser = mutableMapOf<String, Instant>()
-    val lastCommandUsage = mutableMapOf<Command, Instant>()
+    val nextAllowCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
 
     twitchClient.chat.run {
         connect()
@@ -131,34 +131,12 @@ private fun setupTwitchBot(): TwitchClient {
             return@onEvent
         }
 
-        val lastCommandUsageByUser = lastCommandUsagePerUser.getOrPut(messageEvent.user.name) {
-            Instant.now().minusSeconds(BotConfig.userCooldownSeconds)
+        val nextAllowCommandUsageInstant = nextAllowCommandUsageInstantPerUser.getOrPut(command to messageEvent.user.name) {
+            Instant.now()
         }
 
-        val lastGlobalCommandUsage = lastCommandUsage.getOrPut(command) {
-            Instant.now().minusSeconds(BotConfig.globalCommandCooldownSeconds)
-        }
-
-        if (Instant.now().isBefore(lastGlobalCommandUsage.plusSeconds(BotConfig.globalCommandCooldownSeconds)) && CommandPermission.BROADCASTER !in messageEvent.permissions) {
-            val secondsUntilTimeoutOver = Duration.between(
-                Instant.now(),
-                lastGlobalCommandUsage.plusSeconds(BotConfig.globalCommandCooldownSeconds)
-            ).seconds
-
-            twitchClient.chat.sendMessage(
-                BotConfig.channel,
-                "Command is still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
-            )
-            logger.info("Command ${parts.first().lowercase()} is still on cooldown")
-
-            return@onEvent
-        }
-
-        if (Instant.now().isBefore(lastCommandUsageByUser.plusSeconds(BotConfig.userCooldownSeconds)) && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            val secondsUntilTimeoutOver = Duration.between(
-                Instant.now(),
-                lastCommandUsageByUser.plusSeconds(BotConfig.userCooldownSeconds)
-            ).seconds
+        if (Instant.now().isBefore(nextAllowCommandUsageInstant) &&  CommandPermission.MODERATOR !in messageEvent.permissions) {
+            val secondsUntilTimeoutOver = Duration.between(Instant.now(), nextAllowCommandUsageInstant).seconds
 
             twitchClient.chat.sendMessage(
                 BotConfig.channel,
@@ -176,14 +154,7 @@ private fun setupTwitchBot(): TwitchClient {
 
         commandHandlerCoroutineScope.launch {
             command.handler(commandHandlerScope, parts.drop(1))
-
-            if (commandHandlerScope.putUserOnCooldown) {
-                lastCommandUsagePerUser[messageEvent.user.name] = Instant.now()
-            }
-
-            if (commandHandlerScope.putCommandOnCooldown) {
-                lastCommandUsage[command] = Instant.now()
-            }
+            nextAllowCommandUsageInstantPerUser[command to messageEvent.user.name]!!.plus(commandHandlerScope.addedUserCooldown.toJavaDuration())
         }
     }
 

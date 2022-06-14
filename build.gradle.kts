@@ -28,9 +28,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
 
     implementation("com.github.kwhat:jnativehook:2.2.2")
-    implementation("com.github.twitch4j:twitch4j:1.9.0")
+    implementation("com.github.twitch4j:twitch4j:1.10.0")
     implementation("com.adamratzman:spotify-api-kotlin-core:3.8.6")
-    implementation("javazoom:jlayer:1.0.1")
+    implementation("com.googlecode.soundlibs:mp3spi:1.9.5.4")
 
     /*implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")

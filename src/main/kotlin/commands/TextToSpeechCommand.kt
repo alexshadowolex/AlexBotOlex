@@ -8,9 +8,13 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import javazoom.jl.player.Player
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
+import javax.sound.sampled.AudioSystem
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 private data class TtsRequest(
@@ -49,8 +53,15 @@ val textToSpeechCommand = Command(
 
             logger.info("Streamlabs returned URL '$url'")
 
-            Player(httpClient.get<HttpResponse>(url).content.toInputStream().buffered()).play()
-            putCommandOnCooldown = true
+            withContext(Dispatchers.IO) {
+                val ttsDataInputStream = httpClient.get<HttpResponse>(url).content.toInputStream().buffered()
+                val ttsSpeechDuration = (AudioSystem.getAudioFileFormat(ttsDataInputStream).properties()["duration"] as Long).seconds
+
+                addedUserCooldown = ttsSpeechDuration * 5
+
+                Player(ttsDataInputStream).play()
+            }
+
         } catch (e: Exception) {
             chat.sendMessage(BotConfig.channel, "Unable to play TTS.")
             logger.error("Unable to play TTS.", e)
