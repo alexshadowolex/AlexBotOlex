@@ -4,6 +4,7 @@ import com.github.twitch4j.common.events.domain.EventUser
 import commands.helpCommand
 import commands.songRequestCommand
 import commands.textToSpeechCommand
+import commands.soundAlertCommand
 
 data class Command(
     val names: List<String>,
@@ -22,4 +23,5 @@ val commands = listOf(
     helpCommand,
     songRequestCommand,
     textToSpeechCommand,
+    soundAlertCommand,
 )
