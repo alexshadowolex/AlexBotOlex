@@ -1,6 +1,5 @@
 
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -21,7 +20,6 @@ import io.ktor.client.features.logging.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.*
@@ -31,7 +29,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
-import kotlin.collections.set
 import kotlin.system.exitProcess
 import kotlin.time.toJavaDuration
 
@@ -57,15 +54,6 @@ fun main() = try {
 
     application {
         DisposableEffect(Unit) {
-            val twitchClient = setupTwitchBot()
-
-            onDispose {
-                twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
-                logger.info("App shutting down...")
-            }
-        }
-
-        LaunchedEffect(Unit) {
             spotifyClient = spotifyClientApi(
                 clientId = BotConfig.spotifyClientId,
                 clientSecret = BotConfig.spotifyClientSecret,
@@ -77,6 +65,13 @@ fun main() = try {
             }.build()
 
             logger.info("Spotify client built successfully.")
+
+            val twitchClient = setupTwitchBot()
+
+            onDispose {
+                twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
+                logger.info("App shutting down...")
+            }
         }
 
         Window(
@@ -119,12 +114,12 @@ private fun setupTwitchBot(): TwitchClient {
         val parts = message.substringAfter(BotConfig.commandPrefix).split(" ")
         val command = commands.find { parts.first().lowercase() in it.names } ?: return@onEvent
 
-        if (BotConfig.onlyMods && CommandPermission.MODERATOR in messageEvent.permissions) {
+        if (BotConfig.onlyMods && CommandPermission.MODERATOR !in messageEvent.permissions) {
             twitchClient.chat.sendMessage(
                 BotConfig.channel,
                 "You do not have the required permissions to use this command."
             )
-            logger.info("User '${messageEvent.user}' does not have the necessary permissions to call command '${command.names.first()}'")
+            logger.info("User '${messageEvent.user.name}' does not have the necessary permissions to call command '${command.names.first()}'")
 
             return@onEvent
         }
@@ -135,7 +130,7 @@ private fun setupTwitchBot(): TwitchClient {
             Instant.now()
         }
 
-        if (Instant.now().isBefore(nextAllowCommandUsageInstant) &&  CommandPermission.MODERATOR !in messageEvent.permissions) {
+        if (Instant.now().isBefore(nextAllowCommandUsageInstant) && CommandPermission.MODERATOR !in messageEvent.permissions) {
             val secondsUntilTimeoutOver = Duration.between(Instant.now(), nextAllowCommandUsageInstant).seconds
 
             twitchClient.chat.sendMessage(

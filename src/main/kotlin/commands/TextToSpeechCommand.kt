@@ -2,24 +2,19 @@ package commands
 
 import BotConfig
 import Command
-import com.adamratzman.spotify.utils.Language
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
-import javazoom.jl.player.Player
 import kotlinx.coroutines.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.audio.mp3.MP3AudioHeader
 import java.io.File
-import javax.sound.sampled.AudioSystem
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 @Serializable
 private data class TtsRequest(
@@ -38,7 +33,7 @@ private data class TtsQueueEntry(
     val duration: Duration
 )
 
-private val ttsFileQueue = mutableListOf<TtsQueueEntry>()
+private val ttsQueue = mutableListOf<TtsQueueEntry>()
 
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
@@ -70,10 +65,17 @@ val textToSpeechCommand = Command(
                     writeBytes(httpClient.get<HttpResponse>(url).content.toInputStream().readAllBytes())
                 }
 
-                val ttsSpeechDuration = AudioFileIO.read(ttsDataFile).audioHeader.trackLength.seconds
-                addedUserCooldown = ttsSpeechDuration * 5
+                val ttsSpeechDuration = ProcessBuilder("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", ttsDataFile.absolutePath.replace("\\","\\\\")).start().run {
+                    while (isAlive) {
+                        delay(100.milliseconds)
+                    }
 
-                ttsFileQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
+                    inputReader().readText().trim().toDouble().seconds
+                }
+
+                addedUserCooldown = ttsSpeechDuration * 10
+
+                ttsQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
             }
         } catch (e: Exception) {
             chat.sendMessage(BotConfig.channel, "Unable to play TTS.")
@@ -87,10 +89,10 @@ val ttsPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
 @Suppress("unused")
 val ttsPlayerJob = ttsPlayerCoroutineScope.launch {
     while (isActive) {
-        ttsFileQueue.removeFirstOrNull()?.let { entry ->
-            entry.file.inputStream().use {
-                Player(it).play()
-            }
+        ttsQueue.removeFirstOrNull()?.let { entry ->
+            ProcessBuilder("ffplay", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
+                inheritIO()
+            }.start()
 
             delay(entry.duration + 3.seconds)
         } ?: run {
