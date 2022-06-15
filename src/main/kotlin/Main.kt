@@ -1,4 +1,3 @@
-
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -20,6 +19,8 @@ import io.ktor.client.features.logging.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.*
@@ -54,15 +55,17 @@ fun main() = try {
 
     application {
         DisposableEffect(Unit) {
-            spotifyClient = spotifyClientApi(
-                clientId = BotConfig.spotifyClientId,
-                clientSecret = BotConfig.spotifyClientSecret,
-                redirectUri = "https://www.example.com",
-                token = Json.decodeFromString(File("data/spotifytoken.json").readText())
-            ).apply {
-                options.enableDebugMode = true
-                options.enableLogger = true
-            }.build()
+            spotifyClient = runBlocking {
+                spotifyClientApi(
+                    clientId = BotConfig.spotifyClientId,
+                    clientSecret = BotConfig.spotifyClientSecret,
+                    redirectUri = "https://www.example.com",
+                    token = Json.decodeFromString(File("data/spotifytoken.json").readText())
+                ).apply {
+                    options.enableDebugMode = true
+                    options.enableLogger = true
+                }.build()
+            }
 
             logger.info("Spotify client built successfully.")
 
