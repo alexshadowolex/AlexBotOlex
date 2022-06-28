@@ -33,6 +33,7 @@ import java.nio.file.Paths
 import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
+import kotlin.time.DurationUnit
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
 
@@ -134,10 +135,10 @@ private fun setupTwitchBot(): TwitchClient {
             Clock.System.now()
         }
 
-        if ((Clock.System.now() - nextAllowedCommandUsageInstant).isPositive() && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            val secondsUntilTimeoutOver = Clock.System.now() - nextAllowedCommandUsageInstant
+        if ((Clock.System.now() - nextAllowedCommandUsageInstant).isNegative() && CommandPermission.MODERATOR !in messageEvent.permissions) {
+            val durationUntilTimeoutOver = nextAllowedCommandUsageInstant - Clock.System.now()
 
-            twitchClient.chat.sendMessage(BotConfig.channel, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds.")
+            twitchClient.chat.sendMessage(BotConfig.channel, "You are still on cooldown. Please try again in ${durationUntilTimeoutOver.toString(DurationUnit.SECONDS, 0)}")
             logger.info("Unable to execute command due to ongoing cooldown.")
 
             return@onEvent

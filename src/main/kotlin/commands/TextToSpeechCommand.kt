@@ -17,6 +17,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 @Serializable
 private data class TtsRequest(
@@ -81,7 +82,7 @@ val textToSpeechCommand = Command(
                     if (userIsPrivileged) {
                         "Playing TTS..."
                     } else {
-                        "Playing TTS, putting user '${user.name}' on $addedUserCooldown cooldown."
+                        "Playing TTS, putting user '${user.name}' on ${addedUserCooldown.toString(DurationUnit.SECONDS, 0)} cooldown."
                     }
                 )
 
