@@ -76,7 +76,14 @@ val textToSpeechCommand = Command(
                 }
 
                 addedUserCooldown = (ttsSpeechDuration * 20).coerceAtLeast(1.minutes)
-                chat.sendMessage(BotConfig.channel, "Playing TTS, putting user '${user.name}' on $addedUserCooldown cooldown.")
+                chat.sendMessage(
+                    BotConfig.channel,
+                    if (userIsPrivileged) {
+                        "Playing TTS..."
+                    } else {
+                        "Playing TTS, putting user '${user.name}' on $addedUserCooldown cooldown."
+                    }
+                )
 
                 ttsQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
             }

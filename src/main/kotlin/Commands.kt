@@ -14,6 +14,7 @@ data class Command(
 data class CommandHandlerScope(
     val chat: TwitchChat,
     val user: EventUser,
+    val userIsPrivileged: Boolean,
     var addedUserCooldown: Duration = Duration.ZERO,
 )
 

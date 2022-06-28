@@ -145,7 +145,8 @@ private fun setupTwitchBot(): TwitchClient {
 
         val commandHandlerScope = CommandHandlerScope(
             chat = twitchClient.chat,
-            user = messageEvent.user
+            user = messageEvent.user,
+            userIsPrivileged = CommandPermission.MODERATOR in messageEvent.permissions
         )
 
         commandHandlerCoroutineScope.launch {
