@@ -73,7 +73,7 @@ val textToSpeechCommand = Command(
                     inputReader().readText().trim().toDouble().seconds
                 }
 
-                addedUserCooldown = ttsSpeechDuration * 10
+                addedUserCooldown = ttsSpeechDuration * 20
 
                 ttsQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
             }

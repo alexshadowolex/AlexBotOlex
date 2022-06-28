@@ -100,7 +100,7 @@ private fun setupTwitchBot(): TwitchClient {
         .withChatAccount(OAuth2Credential("twitch", chatAccountToken))
         .build()
 
-    val nextAllowCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
+    val nextAllowedCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
 
     twitchClient.chat.run {
         connect()
@@ -129,12 +129,12 @@ private fun setupTwitchBot(): TwitchClient {
 
         logger.info("User '${messageEvent.user.name}' tried using command '${command.names.first()}' with arguments: ${parts.drop(1).joinToString()}")
 
-        val nextAllowCommandUsageInstant = nextAllowCommandUsageInstantPerUser.getOrPut(command to messageEvent.user.name) {
+        val nextAllowedCommandUsageInstant = nextAllowedCommandUsageInstantPerUser.getOrPut(command to messageEvent.user.name) {
             Instant.now()
         }
 
-        if (Instant.now().isBefore(nextAllowCommandUsageInstant) && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            val secondsUntilTimeoutOver = Duration.between(Instant.now(), nextAllowCommandUsageInstant).seconds
+        if (Instant.now().isBefore(nextAllowedCommandUsageInstant) && CommandPermission.MODERATOR !in messageEvent.permissions) {
+            val secondsUntilTimeoutOver = Duration.between(Instant.now(), nextAllowedCommandUsageInstant).seconds
 
             twitchClient.chat.sendMessage(
                 BotConfig.channel,
@@ -152,7 +152,9 @@ private fun setupTwitchBot(): TwitchClient {
 
         commandHandlerCoroutineScope.launch {
             command.handler(commandHandlerScope, parts.drop(1))
-            nextAllowCommandUsageInstantPerUser[command to messageEvent.user.name]!!.plus(commandHandlerScope.addedUserCooldown.toJavaDuration())
+
+            val key = command to messageEvent.user.name
+            nextAllowedCommandUsageInstantPerUser[key] = nextAllowedCommandUsageInstantPerUser[key]!!.plus(commandHandlerScope.addedUserCooldown.toJavaDuration())
         }
     }
 
