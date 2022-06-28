@@ -1,3 +1,4 @@
+
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -20,18 +21,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.toJavaInstant
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.time.Duration
-import java.time.Instant
 import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
-import kotlin.time.toJavaDuration
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
 
@@ -130,16 +131,13 @@ private fun setupTwitchBot(): TwitchClient {
         logger.info("User '${messageEvent.user.name}' tried using command '${command.names.first()}' with arguments: ${parts.drop(1).joinToString()}")
 
         val nextAllowedCommandUsageInstant = nextAllowedCommandUsageInstantPerUser.getOrPut(command to messageEvent.user.name) {
-            Instant.now()
+            Clock.System.now()
         }
 
-        if (Instant.now().isBefore(nextAllowedCommandUsageInstant) && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            val secondsUntilTimeoutOver = Duration.between(Instant.now(), nextAllowedCommandUsageInstant).seconds
+        if ((Clock.System.now() - nextAllowedCommandUsageInstant).isPositive() && CommandPermission.MODERATOR !in messageEvent.permissions) {
+            val secondsUntilTimeoutOver = Clock.System.now() - nextAllowedCommandUsageInstant
 
-            twitchClient.chat.sendMessage(
-                BotConfig.channel,
-                "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds."
-            )
+            twitchClient.chat.sendMessage(BotConfig.channel, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver seconds.")
             logger.info("Unable to execute command due to ongoing cooldown.")
 
             return@onEvent
@@ -154,7 +152,7 @@ private fun setupTwitchBot(): TwitchClient {
             command.handler(commandHandlerScope, parts.drop(1))
 
             val key = command to messageEvent.user.name
-            nextAllowedCommandUsageInstantPerUser[key] = nextAllowedCommandUsageInstantPerUser[key]!!.plus(commandHandlerScope.addedUserCooldown.toJavaDuration())
+            nextAllowedCommandUsageInstantPerUser[key] = nextAllowedCommandUsageInstantPerUser[key]!! + commandHandlerScope.addedUserCooldown
         }
     }
 
@@ -171,7 +169,7 @@ fun setupLogging() {
     val logFileName = DateTimeFormatterBuilder()
         .appendInstant(0)
         .toFormatter()
-        .format(Instant.now())
+        .format(Clock.System.now().toJavaInstant())
         .replace(':', '-')
 
     val logFile = Paths.get(LOG_DIRECTORY, "${logFileName}.log").toFile().also {

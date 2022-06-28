@@ -8,12 +8,14 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
 import java.io.File
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Serializable
@@ -73,7 +75,8 @@ val textToSpeechCommand = Command(
                     inputReader().readText().trim().toDouble().seconds
                 }
 
-                addedUserCooldown = ttsSpeechDuration * 20
+                addedUserCooldown = (ttsSpeechDuration * 20).coerceAtLeast(1.minutes)
+                chat.sendMessage(BotConfig.channel, "Playing TTS, putting user '${user.name}' on $addedUserCooldown cooldown.")
 
                 ttsQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
             }
@@ -92,9 +95,9 @@ val ttsPlayerJob = ttsPlayerCoroutineScope.launch {
         ttsQueue.removeFirstOrNull()?.let { entry ->
             ProcessBuilder("ffplay", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
                 inheritIO()
-            }.start()
+            }.start().onExit().await()
 
-            delay(entry.duration + 3.seconds)
+            delay(3.seconds)
         } ?: run {
             delay(1.seconds)
         }

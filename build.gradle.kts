@@ -26,6 +26,8 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:1.7.36")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.3")
 
     implementation("com.github.kwhat:jnativehook:2.2.2")
     implementation("com.github.twitch4j:twitch4j:1.10.0")
