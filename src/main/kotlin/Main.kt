@@ -14,9 +14,9 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.logging.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,11 +42,11 @@ lateinit var spotifyClient: SpotifyClientApi
 val httpClient = HttpClient(CIO) {
     install(Logging) {
         logger = Logger.DEFAULT
-        level = LogLevel.ALL
+        level = LogLevel.INFO
     }
 
-    install(JsonFeature) {
-        serializer = KotlinxSerializer(Json)
+    install(ContentNegotiation) {
+        json()
     }
 }
 
@@ -64,7 +64,6 @@ fun main() = try {
                     redirectUri = "https://www.example.com",
                     token = Json.decodeFromString(File("data/spotifytoken.json").readText())
                 ).apply {
-                    options.enableDebugMode = true
                     options.enableLogger = true
                 }.build()
             }

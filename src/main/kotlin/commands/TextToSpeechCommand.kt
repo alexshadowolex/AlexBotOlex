@@ -3,9 +3,11 @@ package commands
 import BotConfig
 import Command
 import httpClient
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
@@ -38,6 +40,7 @@ private data class TtsQueueEntry(
 
 private val ttsQueue = mutableListOf<TtsQueueEntry>()
 
+@OptIn(InternalAPI::class)
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
     handler = { arguments ->
@@ -52,20 +55,17 @@ val textToSpeechCommand = Command(
         try {
             logger.info("Playing TTS from message '$text'...")
 
-            val url = httpClient.post<TtsResponse>("https://streamlabs.com/polly/speak") {
+            val url = httpClient.post("https://streamlabs.com/polly/speak") {
                 contentType(ContentType.Application.Json)
 
-                body = TtsRequest(
-                    voice = "Brian",
-                    text = text
-                )
-            }.speakUrl
+                setBody(TtsRequest(voice = "Brian", text = text))
+            }.body<TtsResponse>().speakUrl
 
             logger.info("Streamlabs returned URL '$url'.")
 
             withContext(Dispatchers.IO) {
                 val ttsDataFile = File.createTempFile("tts_", ".mp3").apply {
-                    writeBytes(httpClient.get<HttpResponse>(url).content.toInputStream().readAllBytes())
+                    writeBytes(httpClient.get(url).body<HttpResponse>().content.toInputStream().readAllBytes())
                 }
 
                 val ttsSpeechDuration = ProcessBuilder("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", ttsDataFile.absolutePath.replace("\\","\\\\")).start().run {

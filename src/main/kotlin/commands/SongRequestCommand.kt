@@ -79,7 +79,7 @@ suspend fun updateQueue(query: String): Track? {
     logger.info("Result after search: $result")
 
     try {
-        httpClient.post<Unit>("https://api.spotify.com/v1/me/player/queue") {
+        httpClient.post("https://api.spotify.com/v1/me/player/queue") {
             header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
 
             url {
@@ -89,7 +89,7 @@ suspend fun updateQueue(query: String): Track? {
 
         logger.info("Result URI: ${result.uri.uri}")
     } catch (e: Exception) {
-        logger.warn("Spotify is probably not set up. Returning null...")
+        logger.error("Spotify is probably not set up.", e)
         return null
     }
 
