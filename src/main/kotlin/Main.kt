@@ -12,6 +12,10 @@ import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
+import config.TwitchBotConfig
+import dev.kord.core.Kord
+import dev.kord.gateway.Intent
+import dev.kord.gateway.PrivilegedIntent
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -52,15 +56,27 @@ val httpClient = HttpClient(CIO) {
 
 val commandHandlerCoroutineScope = CoroutineScope(Dispatchers.IO)
 
-fun main() = try {
+suspend fun main() = try {
     setupLogging()
+
+    val discordToken = File("data/discordtoken.txt").readText()
+    val discordClient = Kord(discordToken)
+
+    logger.info("Discord client started.")
+
+    CoroutineScope(discordClient.coroutineContext).launch {
+        discordClient.login {
+            @OptIn(PrivilegedIntent::class)
+            intents += Intent.MessageContent
+        }
+    }
 
     application {
         DisposableEffect(Unit) {
             spotifyClient = runBlocking {
                 spotifyClientApi(
-                    clientId = BotConfig.spotifyClientId,
-                    clientSecret = BotConfig.spotifyClientSecret,
+                    clientId = TwitchBotConfig.spotifyClientId,
+                    clientSecret = TwitchBotConfig.spotifyClientSecret,
                     redirectUri = "https://www.example.com",
                     token = Json.decodeFromString(File("data/spotifytoken.json").readText())
                 ).apply {
@@ -73,7 +89,7 @@ fun main() = try {
             val twitchClient = setupTwitchBot()
 
             onDispose {
-                twitchClient.chat.sendMessage(BotConfig.channel, "Bot shutting down peepoLeave")
+                twitchClient.chat.sendMessage(TwitchBotConfig.channel, "Bot shutting down peepoLeave")
                 logger.info("App shutting down...")
             }
         }
@@ -83,7 +99,7 @@ fun main() = try {
             title = "AlexBotOlex",
             onCloseRequest = ::exitApplication
         ) {
-            App()
+            App(discordClient)
         }
     }
 } catch (e: Throwable) {
@@ -105,22 +121,22 @@ private fun setupTwitchBot(): TwitchClient {
 
     twitchClient.chat.run {
         connect()
-        joinChannel(BotConfig.channel)
-        sendMessage(BotConfig.channel, "Bot running peepoArrive")
+        joinChannel(TwitchBotConfig.channel)
+        sendMessage(TwitchBotConfig.channel, "Bot running peepoArrive")
     }
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
         val message = messageEvent.message
-        if (!message.startsWith(BotConfig.commandPrefix)) {
+        if (!message.startsWith(TwitchBotConfig.commandPrefix)) {
             return@onEvent
         }
 
-        val parts = message.substringAfter(BotConfig.commandPrefix).split(" ")
+        val parts = message.substringAfter(TwitchBotConfig.commandPrefix).split(" ")
         val command = commands.find { parts.first().lowercase() in it.names } ?: return@onEvent
 
-        if (BotConfig.onlyMods && CommandPermission.MODERATOR !in messageEvent.permissions) {
+        if (TwitchBotConfig.onlyMods && CommandPermission.MODERATOR !in messageEvent.permissions) {
             twitchClient.chat.sendMessage(
-                BotConfig.channel,
+                TwitchBotConfig.channel,
                 "You do not have the required permissions to use this command."
             )
             logger.info("User '${messageEvent.user.name}' does not have the necessary permissions to call command '${command.names.first()}'")
@@ -137,7 +153,7 @@ private fun setupTwitchBot(): TwitchClient {
         if ((Clock.System.now() - nextAllowedCommandUsageInstant).isNegative() && CommandPermission.MODERATOR !in messageEvent.permissions) {
             val durationUntilTimeoutOver = nextAllowedCommandUsageInstant - Clock.System.now()
 
-            twitchClient.chat.sendMessage(BotConfig.channel, "You are still on cooldown. Please try again in ${durationUntilTimeoutOver.toString(DurationUnit.SECONDS, 0)}")
+            twitchClient.chat.sendMessage(TwitchBotConfig.channel, "You are still on cooldown. Please try again in ${durationUntilTimeoutOver.toString(DurationUnit.SECONDS, 0)}")
             logger.info("Unable to execute command due to ongoing cooldown.")
 
             return@onEvent

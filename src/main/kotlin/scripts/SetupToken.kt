@@ -1,6 +1,6 @@
 package scripts
 
-import BotConfig
+import config.TwitchBotConfig
 import com.adamratzman.spotify.SpotifyScope
 import com.adamratzman.spotify.getSpotifyAuthorizationUrl
 import com.adamratzman.spotify.spotifyClientApi
@@ -18,7 +18,7 @@ suspend fun main() {
         URI.create(
             getSpotifyAuthorizationUrl(
                 scopes = SpotifyScope.values(),
-                clientId = BotConfig.spotifyClientId,
+                clientId = TwitchBotConfig.spotifyClientId,
                 redirectUri = redirectUri
             )
         )
@@ -29,8 +29,8 @@ suspend fun main() {
 
     val api = spotifyClientApi {
         credentials {
-            clientId = BotConfig.spotifyClientId
-            clientSecret = BotConfig.spotifyClientSecret
+            clientId = TwitchBotConfig.spotifyClientId
+            clientSecret = TwitchBotConfig.spotifyClientSecret
             this.redirectUri = redirectUri
         }
 

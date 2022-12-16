@@ -1,7 +1,9 @@
+package config
+
 import java.io.File
 import java.util.*
 
-object BotConfig {
+object TwitchBotConfig {
     private val properties = Properties().apply {
         load(File("data/botconfig.properties").inputStream())
     }

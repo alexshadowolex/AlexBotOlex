@@ -1,6 +1,6 @@
 package commands
 
-import BotConfig
+import config.TwitchBotConfig
 import Command
 import httpClient
 import io.ktor.client.call.*
@@ -45,7 +45,7 @@ val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
     handler = { arguments ->
         if (arguments.isEmpty()) {
-            chat.sendMessage(BotConfig.channel, "No input provided.")
+            chat.sendMessage(TwitchBotConfig.channel, "No input provided.")
             logger.info("No TTS input provided.")
             return@Command
         }
@@ -78,7 +78,7 @@ val textToSpeechCommand = Command(
 
                 addedUserCooldown = (ttsSpeechDuration * 20).coerceAtLeast(1.minutes)
                 chat.sendMessage(
-                    BotConfig.channel,
+                    TwitchBotConfig.channel,
                     if (userIsPrivileged) {
                         "Playing TTS..."
                     } else {
@@ -89,7 +89,7 @@ val textToSpeechCommand = Command(
                 ttsQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
             }
         } catch (e: Exception) {
-            chat.sendMessage(BotConfig.channel, "Unable to play TTS.")
+            chat.sendMessage(TwitchBotConfig.channel, "Unable to play TTS.")
             logger.error("Unable to play TTS:", e)
         }
     }

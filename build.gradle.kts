@@ -39,6 +39,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
 
+    implementation("dev.kord:kord-core:0.8.0-M16")
 
     implementation(kotlin("script-runtime"))
 }

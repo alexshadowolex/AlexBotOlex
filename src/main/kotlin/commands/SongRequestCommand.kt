@@ -1,6 +1,6 @@
 package commands
 
-import BotConfig
+import config.TwitchBotConfig
 import Command
 import com.adamratzman.spotify.endpoints.pub.SearchApi
 import com.adamratzman.spotify.models.Track
@@ -20,7 +20,7 @@ val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
     handler = { arguments ->
         if (arguments.isEmpty()) {
-            chat.sendMessage(BotConfig.channel, "No song given.")
+            chat.sendMessage(TwitchBotConfig.channel, "No song given.")
             logger.warn("No arguments given")
             return@Command
         }
@@ -29,7 +29,7 @@ val songRequestCommand = Command(
 
         try {
             chat.sendMessage(
-                BotConfig.channel,
+                TwitchBotConfig.channel,
                 updateQueue(query)?.let { track ->
                     addedUserCooldown = 30.seconds
                     "Song '${track.name}' by ${

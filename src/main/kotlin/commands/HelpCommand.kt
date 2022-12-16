@@ -1,12 +1,12 @@
 package commands
 
-import BotConfig
+import config.TwitchBotConfig
 import Command
 import commands
 
 val helpCommand: Command = Command(
     names = listOf("help"),
     handler = {
-        chat.sendMessage(BotConfig.channel, "Available commands: ${commands.joinToString("; ") { command -> command.names.joinToString("|") { "${BotConfig.commandPrefix}${it}" } }}.")
+        chat.sendMessage(TwitchBotConfig.channel, "Available commands: ${commands.joinToString("; ") { command -> command.names.joinToString("|") { "${TwitchBotConfig.commandPrefix}${it}" } }}.")
     }
 )
