@@ -14,6 +14,8 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
 import config.TwitchBotConfig
 import dev.kord.core.Kord
+import dev.kord.core.entity.channel.TextChannel
+import dev.kord.core.supplier.EntitySupplyStrategy
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import io.ktor.client.*
@@ -95,7 +97,7 @@ suspend fun main() = try {
         }
 
         Window(
-            state = WindowState(size = DpSize(400.dp, 200.dp)),
+            state = WindowState(size = DpSize(700.dp, 250.dp)),
             title = "AlexBotOlex",
             onCloseRequest = ::exitApplication
         ) {
@@ -175,6 +177,24 @@ private fun setupTwitchBot(): TwitchClient {
 
     logger.info("Twitch client started.")
     return twitchClient
+}
+
+suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Kord) {
+    val channel = discordClient.getChannelOf<TextChannel>(DiscordBotConfig.announcementChannelId, EntitySupplyStrategy.cacheWithCachingRestFallback)
+        ?: error("Invalid channel ID.")
+
+    val channelName = channel.name
+    val channelId = channel.id
+
+    logger.info("Discord message: $messageForDiscord | Channel Name: $channelName | Channel ID: $channelId")
+
+    channel.createMessage(
+        "$messageForDiscord\n" +
+                DiscordBotConfig.announcementUsers.joinToString(" ") { "<@$it>" } +
+        "\nhttps://www.twitch.tv/alexshadowolex"
+    )
+
+    logger.info("Message created on Discord Channel $channelName")
 }
 
 
