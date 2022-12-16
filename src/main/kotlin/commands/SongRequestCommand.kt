@@ -27,28 +27,51 @@ val songRequestCommand = Command(
 
         val query = arguments.joinToString(" ")
 
-        chat.sendMessage(
-            BotConfig.channel,
-            updateQueue(query)?.let { track ->
-                addedUserCooldown = 30.seconds
-                "Song '${track.name}' by ${track.artists.map { "'${it.name}'" }.let { artists ->
-                    listOf(artists.dropLast(1).joinToString(), artists.last()).filter { it.isNotBlank() }.joinToString(" and ")}
-                } has been added to the playlist ${emotes.random()}"
-            } ?: run {
-                "No track with query '$query' found."
-            }
-        )
+        try {
+            chat.sendMessage(
+                BotConfig.channel,
+                updateQueue(query)?.let { track ->
+                    addedUserCooldown = 30.seconds
+                    "Song '${track.name}' by ${
+                        track.artists.map { "'${it.name}'" }.let { artists ->
+                            listOf(
+                                artists.dropLast(1).joinToString(),
+                                artists.last()
+                            ).filter { it.isNotBlank() }.joinToString(" and ")
+                        }
+                    } has been added to the playlist ${emotes.random()}"
+                } ?: run {
+                    "No track with query '$query' found."
+                }
+            )
+        } catch (e: Exception) {
+            logger.error("Something went wrong with songrequests", e)
+        }
     }
 )
 
 suspend fun updateQueue(query: String): Track? {
-    if (!spotifyClient.isTokenValid().isValid) {
-        logger.debug("Refreshing Spotify token...")
-        logger.debug("Current token: '${spotifyClient.token.accessToken}'")
+    val spotifyTokenIsValid: Boolean = try {
+        spotifyClient.isTokenValid(makeTestRequest = false).isValid
+    } catch (e: Exception){
+        logger.warn("Token seems invalid.", e)
+        false
+    }
 
-        spotifyClient.refreshToken()
+    logger.info("called updateQueue. Checking if token is Valid: $spotifyTokenIsValid")
 
-        logger.debug("New token: '${spotifyClient.token.accessToken}', expires at: ${DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(spotifyClient.token.expiresAt))}")
+    if (!spotifyTokenIsValid) {
+        logger.info("Refreshing Spotify token...")
+        logger.info("Current token: '${spotifyClient.token.accessToken}'")
+
+        try {
+            spotifyClient.refreshToken()
+        } catch (e: Exception){
+            logger.error("An error occured trying to refresh the token.", e)
+            logger.info("New token: '${spotifyClient.token.accessToken}', expires at: ${DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(spotifyClient.token.expiresAt))}")
+            return null
+        }
+
         logger.info("Token has been refreshed.")
     }
 
