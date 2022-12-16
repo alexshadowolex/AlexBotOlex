@@ -1,5 +1,6 @@
 
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -99,7 +100,8 @@ suspend fun main() = try {
         Window(
             state = WindowState(size = DpSize(700.dp, 250.dp)),
             title = "AlexBotOlex",
-            onCloseRequest = ::exitApplication
+            onCloseRequest = ::exitApplication,
+            icon = painterResource("icon.ico")
         ) {
             App(discordClient)
         }

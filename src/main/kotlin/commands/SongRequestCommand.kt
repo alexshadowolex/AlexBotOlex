@@ -1,10 +1,10 @@
 package commands
 
-import config.TwitchBotConfig
 import Command
 import com.adamratzman.spotify.endpoints.pub.SearchApi
 import com.adamratzman.spotify.models.Track
 import com.adamratzman.spotify.utils.Market
+import config.TwitchBotConfig
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -14,10 +14,9 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
 
-private val emotes = listOf("BLANKIES", "NODDERS", "ratJAM", "LETSFUCKINGO", "batPls", "borpafast", "breadyJAM", "AlienPls3", "DonaldPls", "pigeonJam", "catJAM")
-
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
+    description = "Add a spotify song to the current playlist. The links have to be spotify song links open.spotify.com/tracks",
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(TwitchBotConfig.channel, "No song given.")
@@ -39,7 +38,7 @@ val songRequestCommand = Command(
                                 artists.last()
                             ).filter { it.isNotBlank() }.joinToString(" and ")
                         }
-                    } has been added to the playlist ${emotes.random()}"
+                    } has been added to the playlist ${TwitchBotConfig.songRequestEmotes.random()}"
                 } ?: run {
                     "No track with query '$query' found."
                 }

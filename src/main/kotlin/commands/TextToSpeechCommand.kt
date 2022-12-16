@@ -1,7 +1,7 @@
 package commands
 
-import config.TwitchBotConfig
 import Command
+import config.TwitchBotConfig
 import httpClient
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -43,6 +43,7 @@ private val ttsQueue = mutableListOf<TtsQueueEntry>()
 @OptIn(InternalAPI::class)
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
+    description = "Play TTS message. The given message has to be written behind the command.",
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(TwitchBotConfig.channel, "No input provided.")
