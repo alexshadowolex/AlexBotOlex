@@ -14,7 +14,11 @@ val soundAlertCommand: Command = Command(
     names = listOf("soundalert", "sa"),
     description = """
             Activate a sound alert. Following sound alerts exist:
-            ${File(TwitchBotConfig.soundAlertDirectory).listFiles()?.filter { it.extension in TwitchBotConfig.allowedSoundFiles }?.map { it.nameWithoutExtension }?.joinToString(",") }
+            ${
+                File(TwitchBotConfig.soundAlertDirectory).listFiles()
+                    ?.filter { it.extension in TwitchBotConfig.allowedSoundFiles }
+                    ?.joinToString(",") { it.nameWithoutExtension }
+            }
         """.trimIndent(),
     handler = {arguments ->
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
@@ -38,9 +42,7 @@ val soundAlertCommand: Command = Command(
             val soundAlertFile = soundAlertDirectory.listFiles()!!
                 .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
                 .map { it to LevenshteinDistance.getDefaultInstance().apply(it.nameWithoutExtension, arguments.joinToString(" ")) }
-                .also { logger.info(it.toString()) }
                 .minByOrNull { (_, levenshteinDistance) -> levenshteinDistance }
-                .also { logger.info(it.toString()) }
                 ?.takeIf { (_, levenshteinDistance) -> levenshteinDistance < TwitchBotConfig.levenshteinThreshold }
                 ?.first
 

@@ -10,13 +10,11 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import logger
 import spotifyClient
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
 
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
-    description = "Add a spotify song to the current playlist. The links have to be spotify song links open.spotify.com/tracks",
+    description = "Add a spotify song to the current playlist. Either provide a name or a link. The links have to be spotify song links \"open.spotify.com/tracks\"",
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(TwitchBotConfig.channel, "No song given.")
@@ -50,29 +48,7 @@ val songRequestCommand = Command(
 )
 
 suspend fun updateQueue(query: String): Track? {
-    val spotifyTokenIsValid: Boolean = try {
-        spotifyClient.isTokenValid(makeTestRequest = false).isValid
-    } catch (e: Exception){
-        logger.warn("Token seems invalid.", e)
-        false
-    }
-
-    logger.info("called updateQueue. Checking if token is Valid: $spotifyTokenIsValid")
-
-    if (!spotifyTokenIsValid) {
-        logger.info("Refreshing Spotify token...")
-        logger.info("Current token: '${spotifyClient.token.accessToken}'")
-
-        try {
-            spotifyClient.refreshToken()
-        } catch (e: Exception){
-            logger.error("An error occured trying to refresh the token.", e)
-            logger.info("New token: '${spotifyClient.token.accessToken}', expires at: ${DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(spotifyClient.token.expiresAt))}")
-            return null
-        }
-
-        logger.info("Token has been refreshed.")
-    }
+    logger.info("called updateQueue.")
 
     val result = try {
         Url(query).takeIf { it.host == "open.spotify.com" && it.encodedPath.startsWith("/track/") }?.let {
