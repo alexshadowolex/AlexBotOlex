@@ -10,18 +10,19 @@ val helpCommand: Command = Command(
     handler = { arguments ->
         var message =
             """ 
-                    Available commands: 
-                    ${commands.joinToString("; ") { command -> command.names.joinToString("|") { "${TwitchBotConfig.commandPrefix}${it}" } }}.
-                """.trimIndent()
+                Available commands: 
+                ${commands.joinToString("; ") { command -> command.names.joinToString("|") { "${TwitchBotConfig.commandPrefix}${it}" } }}.
+            """.trimIndent()
 
         val command = commands.find { arguments.firstOrNull()?.lowercase() in it.names }
-        if(command != null) {
+        if (command != null) {
             message =
                 """
                     Command ${arguments.first()}: 
                     ${command.description}
                 """.trimIndent()
         }
+
         chat.sendMessage(
             TwitchBotConfig.channel,
             message

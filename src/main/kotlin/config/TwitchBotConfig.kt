@@ -2,6 +2,7 @@ package config
 
 import java.io.File
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 object TwitchBotConfig {
     private val properties = Properties().apply {
@@ -14,4 +15,8 @@ object TwitchBotConfig {
     val spotifyClientSecret: String = properties.getProperty("spotify_client_secret")
     val commandPrefix: String = properties.getProperty("command_prefix")
     val songRequestEmotes: List<String> = properties.getProperty("song_request_emotes").split(",")
+    val soundAlertDirectory: String = properties.getProperty("sound_alert_directory")
+    val allowedSoundFiles: List<String> = properties.getProperty("allowed_sound_files").split(",")
+    val levenshteinThreshold = properties.getProperty("levenshtein_threshold").toInt()
+    val soundAlertUserCooldown = properties.getProperty("sound_alert_user_cooldown").toInt().seconds
 }

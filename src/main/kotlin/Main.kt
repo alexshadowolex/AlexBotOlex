@@ -13,6 +13,7 @@ import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
+import commands.soundAlertPlayerJob
 import config.TwitchBotConfig
 import dev.kord.core.Kord
 import dev.kord.core.entity.channel.TextChannel
@@ -93,6 +94,7 @@ suspend fun main() = try {
 
             onDispose {
                 twitchClient.chat.sendMessage(TwitchBotConfig.channel, "Bot shutting down peepoLeave")
+                soundAlertPlayerJob.cancel()
                 logger.info("App shutting down...")
             }
         }

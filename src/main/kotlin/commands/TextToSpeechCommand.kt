@@ -96,7 +96,7 @@ val textToSpeechCommand = Command(
     }
 )
 
-val ttsPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
+private val ttsPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
 
 @Suppress("unused")
 val ttsPlayerJob = ttsPlayerCoroutineScope.launch {
