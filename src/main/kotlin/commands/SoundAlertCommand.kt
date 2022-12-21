@@ -28,7 +28,7 @@ val soundAlertCommand: Command = Command(
             return@Command
         }
 
-        val query = arguments.joinToString(" ")
+        val query = arguments.joinToString(" ").lowercase()
 
 
         if (query.isEmpty()) {
@@ -41,7 +41,7 @@ val soundAlertCommand: Command = Command(
         } else {
             val soundAlertFile = soundAlertDirectory.listFiles()!!
                 .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
-                .map { it to LevenshteinDistance.getDefaultInstance().apply(it.nameWithoutExtension, arguments.joinToString(" ")) }
+                .map { it to LevenshteinDistance.getDefaultInstance().apply(it.nameWithoutExtension.lowercase(), arguments.joinToString(" ")) }
                 .minByOrNull { (_, levenshteinDistance) -> levenshteinDistance }
                 ?.takeIf { (_, levenshteinDistance) -> levenshteinDistance < TwitchBotConfig.levenshteinThreshold }
                 ?.first
