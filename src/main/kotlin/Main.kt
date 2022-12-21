@@ -7,6 +7,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.adamratzman.spotify.SpotifyClientApi
+import com.adamratzman.spotify.models.Token
 import com.adamratzman.spotify.spotifyClientApi
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.twitch4j.TwitchClient
@@ -16,6 +17,7 @@ import com.github.twitch4j.common.enums.CommandPermission
 import commands.soundAlertPlayerJob
 import config.TwitchBotConfig
 import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.createEmbed
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.supplier.EntitySupplyStrategy
 import dev.kord.gateway.Intent
@@ -33,6 +35,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaInstant
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.*
@@ -41,7 +44,7 @@ import java.nio.file.Paths
 import java.time.format.DateTimeFormatterBuilder
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
-import kotlin.time.DurationUnit
+import kotlin.time.Duration.Companion.seconds
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
 
@@ -90,7 +93,7 @@ suspend fun main() = try {
 
             logger.info("Spotify client built successfully.")
 
-            val twitchClient = setupTwitchBot()
+            val twitchClient = setupTwitchBot(discordClient)
 
             onDispose {
                 twitchClient.chat.sendMessage(TwitchBotConfig.channel, "Bot shutting down peepoLeave")
@@ -114,7 +117,7 @@ suspend fun main() = try {
     exitProcess(0)
 }
 
-private fun setupTwitchBot(): TwitchClient {
+private fun setupTwitchBot(discordClient: Kord): TwitchClient {
     val chatAccountToken = File("data/twitchtoken.txt").readText()
 
     val twitchClient = TwitchClientBuilder.builder()
@@ -157,17 +160,18 @@ private fun setupTwitchBot(): TwitchClient {
         }
 
         if ((Clock.System.now() - nextAllowedCommandUsageInstant).isNegative() && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            val durationUntilTimeoutOver = nextAllowedCommandUsageInstant - Clock.System.now()
+            val secondsUntilTimeoutOver = (nextAllowedCommandUsageInstant - Clock.System.now()).inWholeSeconds.seconds
 
-            twitchClient.chat.sendMessage(TwitchBotConfig.channel, "You are still on cooldown. Please try again in ${durationUntilTimeoutOver.toString(DurationUnit.SECONDS, 0)}")
+            twitchClient.chat.sendMessage(TwitchBotConfig.channel, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver")
             logger.info("Unable to execute command due to ongoing cooldown.")
 
             return@onEvent
         }
 
         val commandHandlerScope = CommandHandlerScope(
+            discordClient = discordClient,
             chat = twitchClient.chat,
-            user = messageEvent.user,
+            messageEvent = messageEvent,
             userIsPrivileged = CommandPermission.MODERATOR in messageEvent.permissions
         )
 
@@ -181,6 +185,40 @@ private fun setupTwitchBot(): TwitchClient {
 
     logger.info("Twitch client started.")
     return twitchClient
+}
+
+suspend fun CommandHandlerScope.sendMessageToDiscordBot(discordMessageContent: DiscordMessageContent): TextChannel {
+    val user = discordMessageContent.user
+    val messageTitle = discordMessageContent.title
+    val message = discordMessageContent.message
+
+    val channel = discordClient.getChannelOf<TextChannel>(discordMessageContent.channelId, EntitySupplyStrategy.cacheWithCachingRestFallback)
+        ?: error("Invalid channel ID.")
+
+    val channelName = channel.name
+    val channelId = channel.id
+
+    logger.info("User: $user | Title: $messageTitle | Message/Link: $message | Channel Name: $channelName | Channel ID: $channelId")
+
+    channel.createEmbed {
+        title = messageTitle + channelName
+        author {
+            name = "Twitch user $user"
+        }
+        description = when (message) {
+            is DiscordMessageContent.Message.FromLink -> ""
+            is DiscordMessageContent.Message.FromText -> message.text
+        }
+        color = DiscordBotConfig.embedAccentColor
+    }
+
+    if (message is DiscordMessageContent.Message.FromLink) {
+        channel.createMessage(message.link)
+    }
+
+    logger.info("Embed/Message created on Discord Channel $channelName")
+
+    return channel
 }
 
 suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Kord) {

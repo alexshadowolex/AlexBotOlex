@@ -37,7 +37,7 @@ val soundAlertCommand: Command = Command(
                     .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
                     .random()
             )
-            addedUserCooldown = TwitchBotConfig.soundAlertUserCooldown
+            addedUserCooldown = TwitchBotConfig.userCooldown
         } else {
             val soundAlertFile = soundAlertDirectory.listFiles()!!
                 .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
@@ -48,7 +48,7 @@ val soundAlertCommand: Command = Command(
 
             soundAlertFile?.let {
                 soundAlertQueue.add(it)
-                addedUserCooldown = TwitchBotConfig.soundAlertUserCooldown
+                addedUserCooldown = TwitchBotConfig.userCooldown
             } ?: run {
                 chat.sendMessage(TwitchBotConfig.channel, "Mad bro? Couldn't find a fitting sound alert.")
                 addedUserCooldown = 5.seconds

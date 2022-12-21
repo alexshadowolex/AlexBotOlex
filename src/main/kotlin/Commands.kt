@@ -1,10 +1,8 @@
 
 import com.github.twitch4j.chat.TwitchChat
-import com.github.twitch4j.common.events.domain.EventUser
-import commands.helpCommand
-import commands.songRequestCommand
-import commands.soundAlertCommand
-import commands.textToSpeechCommand
+import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
+import commands.*
+import dev.kord.core.Kord
 import kotlin.time.Duration
 
 data class Command(
@@ -14,15 +12,19 @@ data class Command(
 )
 
 data class CommandHandlerScope(
+    val discordClient: Kord,
     val chat: TwitchChat,
-    val user: EventUser,
+    val messageEvent: ChannelMessageEvent,
     val userIsPrivileged: Boolean,
     var addedUserCooldown: Duration = Duration.ZERO,
+    var addedCommandCooldown: Duration = Duration.ZERO
 )
 
 val commands = listOf(
     helpCommand,
     songRequestCommand,
     textToSpeechCommand,
-    soundAlertCommand
+    soundAlertCommand,
+    sendClipCommand,
+    feedbackCommand
 )

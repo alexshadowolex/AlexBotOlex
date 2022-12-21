@@ -1,4 +1,5 @@
 
+import dev.kord.common.entity.Snowflake
 import java.io.OutputStream
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -38,5 +39,17 @@ class MultiOutputStream(private vararg val streams: OutputStream) : OutputStream
 
     override fun write(b: ByteArray, off: Int, len: Int) = streams.forEach {
         it.write(b, off, len)
+    }
+}
+
+data class DiscordMessageContent (
+    val message: Message,
+    val title: String,
+    val user: String,
+    val channelId: Snowflake
+) {
+    sealed interface Message {
+        data class FromText(val text: String) : Message
+        data class FromLink(val link: String) : Message
     }
 }

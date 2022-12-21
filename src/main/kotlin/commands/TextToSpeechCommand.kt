@@ -83,7 +83,7 @@ val textToSpeechCommand = Command(
                     if (userIsPrivileged) {
                         "Playing TTS..."
                     } else {
-                        "Playing TTS, putting user '${user.name}' on ${addedUserCooldown.toString(DurationUnit.SECONDS, 0)} cooldown."
+                        "Playing TTS, putting user '${messageEvent.user.name}' on ${addedUserCooldown.toString(DurationUnit.SECONDS, 0)} cooldown."
                     }
                 )
 
