@@ -102,7 +102,7 @@ private val ttsPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
 val ttsPlayerJob = ttsPlayerCoroutineScope.launch {
     while (isActive) {
         ttsQueue.removeFirstOrNull()?.let { entry ->
-            ProcessBuilder("ffplay", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
+            ProcessBuilder("ffplay", "-af", "volume=2", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
                 inheritIO()
             }.start().onExit().await()
 

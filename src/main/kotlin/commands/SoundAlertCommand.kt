@@ -17,7 +17,7 @@ val soundAlertCommand: Command = Command(
             ${
                 File(TwitchBotConfig.soundAlertDirectory).listFiles()
                     ?.filter { it.extension in TwitchBotConfig.allowedSoundFiles }
-                    ?.joinToString(",") { it.nameWithoutExtension }
+                    ?.joinToString(", ") { it.nameWithoutExtension }
             }
         """.trimIndent(),
     handler = {arguments ->

@@ -77,6 +77,7 @@ suspend fun main() = try {
             intents += Intent.MessageContent
         }
     }
+    val initialToken: Token = Json.decodeFromString(File("data/spotifytoken.json").readText())
 
     application {
         DisposableEffect(Unit) {
@@ -85,9 +86,22 @@ suspend fun main() = try {
                     clientId = TwitchBotConfig.spotifyClientId,
                     clientSecret = TwitchBotConfig.spotifyClientSecret,
                     redirectUri = "https://www.example.com",
-                    token = Json.decodeFromString(File("data/spotifytoken.json").readText())
-                ).apply {
-                    options.enableLogger = true
+                    token = initialToken
+                ) {
+                    onTokenRefresh = {
+                        logger.info("Token refreshed")
+                    }
+                    afterTokenRefresh = {
+                        // logger.info("new token after refresh: ${it.token}")
+                        // This line has not been tested yet, but I figure this is the way to do it
+                        it.token.refreshToken = initialToken.refreshToken
+                        try {
+                            File("data/spotifytoken.json").writeText(json.encodeToString(it.token.copy(refreshToken = initialToken.refreshToken)))
+                        } catch(e: Exception) {
+                            logger.error("Error occured while saving new token", e)
+                        }
+                    }
+                    enableLogger = true
                 }.build()
             }
 
