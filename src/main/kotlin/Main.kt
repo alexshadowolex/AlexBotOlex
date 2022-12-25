@@ -8,6 +8,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.Token
+import com.adamratzman.spotify.models.Track
 import com.adamratzman.spotify.spotifyClientApi
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.twitch4j.TwitchClient
@@ -27,10 +28,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaInstant
@@ -106,6 +104,7 @@ suspend fun main() = try {
             }
 
             logger.info("Spotify client built successfully.")
+            startSpotifySongNameGetter(spotifyClient)
 
             val twitchClient = setupTwitchBot(discordClient)
 
@@ -199,6 +198,40 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
     logger.info("Twitch client started.")
     return twitchClient
+}
+
+private const val CURRENT_SONG_FILE_NAME = "currentSong.txt"
+fun startSpotifySongNameGetter(spotifyClient: SpotifyClientApi) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val currentSongFile = File("data\\$CURRENT_SONG_FILE_NAME")
+        var currentFileContent = if(currentSongFile.exists()) {
+            currentSongFile.readText()
+        } else {
+            withContext(Dispatchers.IO) {
+                currentSongFile.createNewFile()
+            }
+            ""
+        }
+        while(isActive) {
+            delay(0.5.seconds)
+            val currentTrack = (spotifyClient.player.getCurrentlyPlaying()?.item as Track)
+            val currentSongString = "\"${currentTrack.name}\"" +
+                    " by " +
+                    currentTrack.artists.map { it.name }.let { artists ->
+                    listOf(
+                        artists.dropLast(1).joinToString(),
+                        artists.last()
+                    ).filter { it.isNotBlank() }.joinToString(" and ")
+            }
+
+            if(currentFileContent == currentSongString) {
+                continue
+            }
+
+            currentFileContent = currentSongString
+            currentSongFile.writeText(currentFileContent)
+        }
+    }
 }
 
 suspend fun CommandHandlerScope.sendMessageToDiscordBot(discordMessageContent: DiscordMessageContent): TextChannel {
