@@ -214,7 +214,11 @@ fun startSpotifySongNameGetter(spotifyClient: SpotifyClientApi) {
         }
         while(isActive) {
             delay(0.5.seconds)
-            val currentTrack = (spotifyClient.player.getCurrentlyPlaying()?.item as Track)
+            val currentTrack = try {
+                (spotifyClient.player.getCurrentlyPlaying()?.item as Track)
+            } catch (e: Exception) {
+                continue
+            }
             val currentSongString = "\"${currentTrack.name}\"" +
                     " by " +
                     currentTrack.artists.map { it.name }.let { artists ->
