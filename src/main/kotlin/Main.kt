@@ -232,7 +232,7 @@ fun startSpotifySongNameGetter(spotifyClient: SpotifyClientApi) {
                 continue
             }
 
-            currentFileContent = currentSongString
+            currentFileContent = currentSongString + " ".repeat(10)
             currentSongFile.writeText(currentFileContent)
         }
     }
