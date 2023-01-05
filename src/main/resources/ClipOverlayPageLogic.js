@@ -2,6 +2,7 @@ window.onload = () => {
     const webSocket = new WebSocket(`ws://localhost:${serverPort}/socket`);
     const videoPlayer = document.querySelector('#video-player');
     const warning = document.querySelector('#warning');
+    const title = document.querySelector('#overlay-title')
 
     let lastRequestTimestamp = Date.now();
 
@@ -39,6 +40,7 @@ window.onload = () => {
     webSocket.onmessage = message => {
         console.log(`Received next video "${message.data}".`);
         videoPlayer.src = `/video/${message.data}`;
+        title.innerHTML = message.data.substring(0, message.data.indexOf('.'));
     };
 
     webSocket.onclose = webSocket.onerror = e => {

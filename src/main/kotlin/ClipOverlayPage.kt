@@ -38,6 +38,32 @@ fun Route.clipOverlayPage() {
                 }
 
                 div {
+                    id = "overlay-title"
+
+                    style = """
+                        position: absolute;
+                        display: flex;
+                        height: 20%;
+                        width: 20%;
+                        font-size: 2vw;
+                        left: 0;
+                        top: 15vw;
+                        border-radius: 0 50px 50px 0px;
+                        padding: 0vw 4vw 1vw 2vw;
+                        max-width: 50%;
+                        color: white;
+                        background-color: rgba(0, 0, 204, 0.3);
+                        transition-delay: 0s;
+                        font-weight: 700;
+                        font-family: 'Trebuchet MS';
+                        transform: translateX(0) skewY(-4deg);
+                        align-items: center;
+                        word-wrap: break-word;
+                        z-index: 5;
+                    """.trimIndent()
+                }
+
+                div {
                     id = "warning"
 
                     style = """
@@ -50,7 +76,7 @@ fun Route.clipOverlayPage() {
                         font-size: 48px;
                         justify-content: center;
                         align-items: center;
-                        z-index: 1;
+                        z-index: 10;
                     """.trimIndent()
 
                     classes = setOf("hidden")
