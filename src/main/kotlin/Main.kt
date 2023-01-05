@@ -28,6 +28,15 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.autohead.*
+import io.ktor.server.plugins.partialcontent.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -59,7 +68,11 @@ val httpClient = HttpClient(CIO) {
     }
 }
 
-val commandHandlerCoroutineScope = CoroutineScope(Dispatchers.IO)
+val json = Json {
+    prettyPrint = true
+}
+
+val backgroundCoroutineScope = CoroutineScope(Dispatchers.IO)
 
 suspend fun main() = try {
     setupLogging()
@@ -76,6 +89,8 @@ suspend fun main() = try {
         }
     }
     val initialToken: Token = Json.decodeFromString(File("data/spotifytoken.json").readText())
+
+    hostServer()
 
     application {
         DisposableEffect(Unit) {
@@ -116,10 +131,11 @@ suspend fun main() = try {
         }
 
         Window(
-            state = WindowState(size = DpSize(700.dp, 250.dp)),
+            state = WindowState(size = DpSize(700.dp, 300.dp)),
             title = "AlexBotOlex",
             onCloseRequest = ::exitApplication,
-            icon = painterResource("icon.ico")
+            icon = painterResource("icon.ico"),
+            resizable = false
         ) {
             App(discordClient)
         }
@@ -188,7 +204,7 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
             userIsPrivileged = CommandPermission.MODERATOR in messageEvent.permissions
         )
 
-        commandHandlerCoroutineScope.launch {
+        backgroundCoroutineScope.launch {
             command.handler(commandHandlerScope, parts.drop(1))
 
             val key = command to messageEvent.user.name
@@ -236,6 +252,43 @@ fun startSpotifySongNameGetter(spotifyClient: SpotifyClientApi) {
             currentSongFile.writeText(currentFileContent)
         }
     }
+}
+
+private fun hostServer() {
+    embeddedServer(io.ktor.server.cio.CIO, port = ClipPlayerConfig.port) {
+        install(WebSockets)
+        install(PartialContent)
+        install(AutoHeadResponse)
+
+        routing {
+            clipOverlayPage()
+
+            webSocket("/socket") {
+                val clipPlayerInstance = ClipPlayer.instance ?: run {
+                    close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "Clip player not setup."))
+                    logger.error("Clip player not setup.")
+                    return@webSocket
+                }
+
+                logger.info("Got new connection.")
+
+                try {
+                    for (frame in incoming) {
+                        clipPlayerInstance.popNextRandomClip().let {
+                            send(it)
+                            logger.debug("Received video request from '${call.request.origin.remoteHost}', sending video '$it'.")
+                        }
+                    }
+                } finally {
+                    logger.info("User disconnected.")
+                }
+            }
+
+            static("/video") {
+                files(ClipPlayerConfig.clipLocation)
+            }
+        }
+    }.start(wait = false)
 }
 
 suspend fun CommandHandlerScope.sendMessageToDiscordBot(discordMessageContent: DiscordMessageContent): TextChannel {
