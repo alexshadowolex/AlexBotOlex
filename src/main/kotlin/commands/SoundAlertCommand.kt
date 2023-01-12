@@ -1,6 +1,7 @@
 package commands
 
 import Command
+import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
 import kotlinx.coroutines.*
 import logger
@@ -12,17 +13,7 @@ private val soundAlertQueue = mutableListOf<File>()
 
 val soundAlertCommand: Command = Command(
     names = listOf("soundalert", "sa"),
-    description = ("Activate a sound alert. Following sound alerts exist: " +
-                File(TwitchBotConfig.soundAlertDirectory).listFiles()
-                    ?.filter { it.extension in TwitchBotConfig.allowedSoundFiles }
-                    ?.joinToString(", ") { it.nameWithoutExtension })
-        .let {
-            // The substring is a dirty quick fix to not exceed the max message length of 500
-            // Need to find a better solution for that
-             if(it.length >= 500) {
-                 it.substring(0, 499).substringBeforeLast(",")
-             } else it
-    },
+    description = "Activate a sound alert. Following sound alerts exist: ${GoogleSpreadSheetConfig.soundAlertSpreadSheetLink}",
     handler = {arguments ->
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
 

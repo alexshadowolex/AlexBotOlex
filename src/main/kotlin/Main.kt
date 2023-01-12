@@ -15,7 +15,18 @@ import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.client.util.store.FileDataStoreFactory
+import com.google.api.services.sheets.v4.Sheets
+import com.google.api.services.sheets.v4.SheetsScopes
+import com.google.api.services.sheets.v4.model.ValueRange
 import commands.soundAlertPlayerJob
+import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createEmbed
@@ -38,9 +49,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toJavaInstant
+import kotlinx.datetime.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -49,6 +58,7 @@ import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.format.DateTimeFormatterBuilder
+import java.util.*
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.seconds
@@ -76,6 +86,8 @@ val backgroundCoroutineScope = CoroutineScope(Dispatchers.IO)
 
 suspend fun main() = try {
     setupLogging()
+
+    checkAndUpdateSpreadSheet()
 
     val discordToken = File("data/discordtoken.txt").readText()
     val discordClient = Kord(discordToken)
@@ -105,8 +117,6 @@ suspend fun main() = try {
                         logger.info("Token refreshed")
                     }
                     afterTokenRefresh = {
-                        // logger.info("new token after refresh: ${it.token}")
-                        // This line has not been tested yet, but I figure this is the way to do it
                         it.token.refreshToken = initialToken.refreshToken
                         try {
                             File("data/spotifytoken.json").writeText(json.encodeToString(it.token.copy(refreshToken = initialToken.refreshToken)))
@@ -341,6 +351,128 @@ suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Ko
     )
 
     logger.info("Message created on Discord Channel $channelName")
+}
+
+private val tableRange = "'${GoogleSpreadSheetConfig.sheetName}'!${GoogleSpreadSheetConfig.firstDataCell}:${GoogleSpreadSheetConfig.lastDataCell}"
+private const val googleCredentialsFilePath = "data\\google_credentials.json"
+private const val storedCredentialsTokenFolder = "data\\tokens"
+
+private fun transformLetterFromToIndex(input: String): String {
+    val output: String
+    val columnsNames = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    output = (if(input.filter { it.isLetter() } != "") {
+        columnsNames.indexOf(input)
+    } else {
+        columnsNames[input.toInt()]
+    }).toString()
+
+    logger.error("input: $input | output: $output")
+
+    return output
+}
+
+private fun checkAndUpdateSpreadSheet() {
+    val sheetService = try {
+        val jsonFactory = GsonFactory.getDefaultInstance()
+        val clientSecrets = GoogleClientSecrets.load(jsonFactory, File(googleCredentialsFilePath).reader())
+        val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
+
+        val flow: GoogleAuthorizationCodeFlow = GoogleAuthorizationCodeFlow.Builder(
+            httpTransport, jsonFactory, clientSecrets, Collections.singletonList(SheetsScopes.SPREADSHEETS)
+        )
+            .setDataStoreFactory(FileDataStoreFactory(File(storedCredentialsTokenFolder)))
+            .setAccessType("offline")
+            .build()
+
+        val receiver = LocalServerReceiver.Builder().setPort(8888).build()
+
+        Sheets.Builder(httpTransport, jsonFactory, AuthorizationCodeInstalledApp(flow, receiver).authorize("user"))
+            .setApplicationName("Sheet Service")
+            .build()
+
+    } catch (e: Exception) {
+        logger.error("An error occured while setting up connection to google: ", e)
+        null
+    }
+
+    if (sheetService == null) {
+        logger.error("sheetService is null. Aborting...")
+        return
+    }
+    logger.info("Connected to google spread sheet service")
+
+    val localContent = try {
+        val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
+        val existingFiles = soundAlertDirectory.listFiles()!!.filter { it.extension in TwitchBotConfig.allowedSoundFiles } as MutableList
+        val lineLength = transformLetterFromToIndex(GoogleSpreadSheetConfig.lastDataCell.filter { it.isLetter() }).toInt() - transformLetterFromToIndex(GoogleSpreadSheetConfig.firstDataCell.filter { it.isLetter() }).toInt() + 1
+        val output = mutableListOf<List<String>>()
+
+        var i = 0
+        while(true) {
+            val currentStartIndex = lineLength * i
+            if(existingFiles.subList(currentStartIndex, existingFiles.size).size > lineLength) {
+                output.add(existingFiles.subList(currentStartIndex, currentStartIndex + lineLength).map { it.nameWithoutExtension })
+            } else {
+                output.add(existingFiles.subList(currentStartIndex, existingFiles.size).map { it.nameWithoutExtension }.let {
+                    var output2 = it
+                    for (j in 0 until lineLength - it.size) {
+                        output2 = output2 + ""
+                    }
+                    output2
+                })
+                break
+            }
+            i++
+        }
+
+        for (j in output.size..GoogleSpreadSheetConfig.lastDataCell.filter { it.isDigit() }.toInt() - GoogleSpreadSheetConfig.firstDataCell.filter { it.isDigit() }.toInt()) {
+            output.add(listOf<String>().let {
+                var output2 = it
+                for (k in 0 until lineLength) {
+                    output2 = output2 + ""
+                }
+                output2
+            })
+        }
+        output
+    } catch (e: Exception) {
+        logger.error("An error occurred while reading local files ", e)
+        null
+    }
+
+    if(localContent == null) {
+        logger.error("localContent is null. Aborting...")
+        return
+    }
+
+    logger.info("Created list of local content")
+
+    @Suppress("UNCHECKED_CAST")
+    val body: ValueRange = ValueRange()
+        .setValues(localContent as List<MutableList<Any>>?)
+
+    try {
+        sheetService.spreadsheets().values().update(GoogleSpreadSheetConfig.spreadSheetId, tableRange, body)
+            .setValueInputOption("RAW")
+            .execute()
+
+        sheetService.spreadsheets().values().update(
+            GoogleSpreadSheetConfig.spreadSheetId,
+            GoogleSpreadSheetConfig.sheetName + "!" + GoogleSpreadSheetConfig.lastUpdatedCell,
+            ValueRange().setValues(
+                listOf(
+                    listOf(
+                        Clock.System.now().toLocalDateTime(timeZone = kotlinx.datetime.TimeZone.currentSystemDefault())
+                            .toString()
+                    )
+                )
+            )
+        )
+            .setValueInputOption("RAW")
+            .execute()
+    } catch (e: Exception) {
+        logger.error("Updating Spread Sheet failed ", e)
+    }
 }
 
 
