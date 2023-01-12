@@ -354,8 +354,8 @@ suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Ko
 }
 
 private val tableRange = "'${GoogleSpreadSheetConfig.sheetName}'!${GoogleSpreadSheetConfig.firstDataCell}:${GoogleSpreadSheetConfig.lastDataCell}"
-private const val googleCredentialsFilePath = "data\\google_credentials.json"
-private const val storedCredentialsTokenFolder = "data\\tokens"
+private const val GOOGLE_CREDENTIALS_FILE_PATH = "data\\google_credentials.json"
+private const val STORED_CREDENTIALS_TOKEN_FOLDER = "data\\tokens"
 
 private fun transformLetterFromToIndex(input: String): String {
     val output: String
@@ -366,21 +366,19 @@ private fun transformLetterFromToIndex(input: String): String {
         columnsNames[input.toInt()]
     }).toString()
 
-    logger.error("input: $input | output: $output")
-
     return output
 }
 
 private fun checkAndUpdateSpreadSheet() {
     val sheetService = try {
         val jsonFactory = GsonFactory.getDefaultInstance()
-        val clientSecrets = GoogleClientSecrets.load(jsonFactory, File(googleCredentialsFilePath).reader())
+        val clientSecrets = GoogleClientSecrets.load(jsonFactory, File(GOOGLE_CREDENTIALS_FILE_PATH).reader())
         val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
 
         val flow: GoogleAuthorizationCodeFlow = GoogleAuthorizationCodeFlow.Builder(
             httpTransport, jsonFactory, clientSecrets, Collections.singletonList(SheetsScopes.SPREADSHEETS)
         )
-            .setDataStoreFactory(FileDataStoreFactory(File(storedCredentialsTokenFolder)))
+            .setDataStoreFactory(FileDataStoreFactory(File(STORED_CREDENTIALS_TOKEN_FOLDER)))
             .setAccessType("offline")
             .build()
 
