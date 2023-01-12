@@ -30,7 +30,7 @@ val feedbackCommand: Command = Command(
         val messageSentOnTwitchChat = chat.sendMessage(TwitchBotConfig.channel, "Message sent in #${channel.name} ${TwitchBotConfig.confirmEmote}")
         logger.info("Message sent to Twitch Chat: $messageSentOnTwitchChat")
 
-        addedUserCooldown = TwitchBotConfig.userCooldown
-        addedCommandCooldown = TwitchBotConfig.commandCooldown
+        addedUserCooldown = TwitchBotConfig.defaultUserCooldown
+        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
     }
 )

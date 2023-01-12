@@ -24,14 +24,14 @@ val soundAlertCommand: Command = Command(
 
         val query = arguments.joinToString(" ").lowercase()
 
-
+        var tmpUserCooldown = TwitchBotConfig.defaultUserCooldown
+        var tmpCommandCooldown = TwitchBotConfig.defaultCommandCooldown
         if (query.isEmpty()) {
             soundAlertQueue.add(
                 soundAlertDirectory.listFiles()!!
                     .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
                     .random()
             )
-            addedUserCooldown = TwitchBotConfig.userCooldown
         } else {
             val soundAlertFile = soundAlertDirectory.listFiles()!!
                 .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
@@ -42,12 +42,14 @@ val soundAlertCommand: Command = Command(
 
             soundAlertFile?.let {
                 soundAlertQueue.add(it)
-                addedUserCooldown = TwitchBotConfig.userCooldown
             } ?: run {
                 chat.sendMessage(TwitchBotConfig.channel, "Mad bro? Couldn't find a fitting sound alert.")
-                addedUserCooldown = 5.seconds
+                tmpUserCooldown = 5.seconds
+                tmpCommandCooldown = 5.seconds
             }
         }
+        addedUserCooldown = tmpUserCooldown
+        addedCommandCooldown = tmpCommandCooldown
     }
 )
 

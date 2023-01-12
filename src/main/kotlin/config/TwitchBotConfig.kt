@@ -18,8 +18,8 @@ object TwitchBotConfig {
     val soundAlertDirectory: String = properties.getProperty("sound_alert_directory")
     val allowedSoundFiles: List<String> = properties.getProperty("allowed_sound_files").split(",")
     val levenshteinThreshold = properties.getProperty("levenshtein_threshold").toInt()
-    val userCooldown = properties.getProperty("user_cooldown").toInt().seconds
-    val commandCooldown = properties.getProperty("command_cooldown").toInt().seconds
+    val defaultUserCooldown = properties.getProperty("default_user_cooldown").toInt().seconds
+    val defaultCommandCooldown = properties.getProperty("default_command_cooldown").toInt().seconds
     val rejectEmote: String = properties.getProperty("reject_emote")
     val confirmEmote: String = properties.getProperty("confirm_emote")
     val explanationEmote: String = properties.getProperty("explanation_emote")

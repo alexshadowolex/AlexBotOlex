@@ -41,6 +41,8 @@ val songRequestCommand = Command(
                     "No track with query '$query' found."
                 }
             )
+
+            addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
         } catch (e: Exception) {
             logger.error("Something went wrong with songrequests", e)
         }

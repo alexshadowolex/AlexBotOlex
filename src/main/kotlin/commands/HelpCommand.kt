@@ -27,5 +27,7 @@ val helpCommand: Command = Command(
             TwitchBotConfig.channel,
             message
         )
+
+        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
     }
 )
