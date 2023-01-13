@@ -125,24 +125,48 @@ fun App(discordClient: Kord) {
 
                         Row(
                             modifier = Modifier
-                                .padding(bottom = 8.dp)
-                                .weight(1f)
+                                .padding(top = 4.dp)
                         ) {
                             Text(
                                 text = "Currently Playing: ${ClipPlayer.instance?.currentlyPlayingClip?.collectAsState()?.value ?: "Nothing"}"
                             )
                         }
 
-                        Row {
-                            Button(
-                                onClick = {
-                                    ClipPlayer.instance?.resetPlaylistFile()
-                                },
-                                modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 5.dp)
+                        ) {
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.5f)
+                                    .padding(end = 1.dp)
                             ) {
-                                Text(
-                                    text = "Reset Playlist"
-                                )
+                                Button(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = {
+                                        ClipPlayer.instance?.resetPlaylistFile()
+                                    }
+                                ) {
+                                    Text(
+                                        text = "Reset Playlist"
+                                    )
+                                }
+                            }
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.5f)
+                                    .padding(start = 1.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        startTimer()
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Start Timer"
+                                    )
+                                }
                             }
                         }
                     }

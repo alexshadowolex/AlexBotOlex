@@ -53,6 +53,7 @@ import kotlinx.datetime.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.apache.commons.lang.time.DurationFormatUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.file.Files
@@ -488,6 +489,25 @@ private fun checkAndUpdateSpreadSheet() {
     }
 }
 
+private const val TIMER_FILE_NAME = "data\\timer.txt"
+fun startTimer() {
+    val timerFile = File(TIMER_FILE_NAME)
+    if(!timerFile.exists()) {
+        timerFile.createNewFile()
+    }
+    val endingTime = Clock.System.now() + TwitchBotConfig.timerDurationMinutes
+    backgroundCoroutineScope.launch {
+        while (isActive) {
+            val timeLeft = endingTime - Clock.System.now()
+            if(timeLeft.isNegative()) {
+                break
+            }
+            val timeLeftFormatted = DurationFormatUtils.formatDuration(timeLeft.inWholeMilliseconds, "mm:ss", true)
+            timerFile.writeText(timeLeftFormatted)
+            delay(1.seconds)
+        }
+    }
+}
 
 private const val LOG_DIRECTORY = "logs"
 

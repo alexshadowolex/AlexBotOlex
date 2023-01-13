@@ -2,6 +2,8 @@ package config
 
 import java.io.File
 import java.util.*
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 object TwitchBotConfig {
@@ -24,4 +26,5 @@ object TwitchBotConfig {
     val confirmEmote: String = properties.getProperty("confirm_emote")
     val explanationEmote: String = properties.getProperty("explanation_emote")
     val allowedDomains: List<String> = properties.getProperty("allowed_domains").split(",")
+    val timerDurationMinutes: Duration = properties.getProperty("timer_duration_minutes").toInt().minutes
 }
