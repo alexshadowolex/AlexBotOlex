@@ -38,7 +38,7 @@ val songRequestCommand = Command(
                         }
                     } has been added to the playlist ${TwitchBotConfig.songRequestEmotes.random()}"
                 } ?: run {
-                    "No track with query '$query' found."
+                    "Couldn't add song to the queue. Either something went wrong or your query returned no result."
                 }
             )
 
@@ -79,14 +79,18 @@ suspend fun updateQueue(query: String): Track? {
     logger.info("Result after search: $result")
 
     try {
-        httpClient.post("https://api.spotify.com/v1/me/player/queue") {
+        val responseStatusCode = httpClient.post("https://api.spotify.com/v1/me/player/queue") {
             header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
 
             url {
                 parameters.append("uri", result.uri.uri)
             }
-        }
+        }.status
 
+        if(responseStatusCode != HttpStatusCode.NoContent) {
+            logger.error("HTTP Response was not 204, something went wrong.")
+            return null
+        }
         logger.info("Result URI: ${result.uri.uri}")
     } catch (e: Exception) {
         logger.error("Spotify is probably not set up.", e)
