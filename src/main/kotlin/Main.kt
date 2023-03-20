@@ -130,7 +130,7 @@ suspend fun main() = try {
             }
 
             logger.info("Spotify client built successfully.")
-            startSpotifySongNameGetter(spotifyClient)
+            startSpotifySongNameGetter()
 
             val twitchClient = setupTwitchBot(discordClient)
 
@@ -242,8 +242,27 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
     return twitchClient
 }
 
+suspend fun getCurrentSpotifySong(): Track? {
+    return try {
+        spotifyClient.player.getCurrentlyPlaying()?.item as Track
+    } catch (_: Exception) {
+        null
+    }
+}
+
+fun createSongString(song: Track): String {
+    return "\"${song.name}\"" +
+            " by " +
+            song.artists.map { it.name }.let { artists ->
+                listOf(
+                    artists.dropLast(1).joinToString(),
+                    artists.last()
+                ).filter { it.isNotBlank() }.joinToString(" and ")
+            }
+}
+
 private const val CURRENT_SONG_FILE_NAME = "currentSong.txt"
-fun startSpotifySongNameGetter(spotifyClient: SpotifyClientApi) {
+fun startSpotifySongNameGetter() {
     CoroutineScope(Dispatchers.IO).launch {
         val currentSongFile = File("data\\$CURRENT_SONG_FILE_NAME")
         var currentFileContent = if(currentSongFile.exists()) {
@@ -256,19 +275,9 @@ fun startSpotifySongNameGetter(spotifyClient: SpotifyClientApi) {
         }
         while(isActive) {
             delay(0.5.seconds)
-            val currentTrack = try {
-                (spotifyClient.player.getCurrentlyPlaying()?.item as Track)
-            } catch (e: Exception) {
-                continue
-            }
-            val currentSongString = "\"${currentTrack.name}\"" +
-                    " by " +
-                    currentTrack.artists.map { it.name }.let { artists ->
-                    listOf(
-                        artists.dropLast(1).joinToString(),
-                        artists.last()
-                    ).filter { it.isNotBlank() }.joinToString(" and ")
-            }
+            val currentTrack = getCurrentSpotifySong() ?: continue
+
+            val currentSongString = createSongString(currentTrack)
 
             if(currentFileContent == currentSongString) {
                 continue
