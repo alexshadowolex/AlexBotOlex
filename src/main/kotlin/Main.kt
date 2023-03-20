@@ -386,27 +386,48 @@ private fun transformLetterFromToIndex(input: String): String {
 }
 
 private fun checkAndUpdateSpreadSheet() {
-    val sheetService = try {
-        val jsonFactory = GsonFactory.getDefaultInstance()
-        val clientSecrets = GoogleClientSecrets.load(jsonFactory, File(GOOGLE_CREDENTIALS_FILE_PATH).reader())
-        val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
+    var sheetService: Sheets? = null
+    for(i in 0..1) {
+        sheetService = try {
+            val jsonFactory = GsonFactory.getDefaultInstance()
+            val clientSecrets = GoogleClientSecrets.load(jsonFactory, File(GOOGLE_CREDENTIALS_FILE_PATH).reader())
+            val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
 
-        val flow: GoogleAuthorizationCodeFlow = GoogleAuthorizationCodeFlow.Builder(
-            httpTransport, jsonFactory, clientSecrets, Collections.singletonList(SheetsScopes.SPREADSHEETS)
-        )
-            .setDataStoreFactory(FileDataStoreFactory(File(STORED_CREDENTIALS_TOKEN_FOLDER)))
-            .setAccessType("offline")
-            .build()
+            val flow: GoogleAuthorizationCodeFlow = GoogleAuthorizationCodeFlow.Builder(
+                httpTransport, jsonFactory, clientSecrets, Collections.singletonList(SheetsScopes.SPREADSHEETS)
+            )
+                .setDataStoreFactory(FileDataStoreFactory(File(STORED_CREDENTIALS_TOKEN_FOLDER)))
+                .setAccessType("offline")
+                .build()
 
-        val receiver = LocalServerReceiver.Builder().setPort(8888).build()
+            val receiver = LocalServerReceiver.Builder().setPort(8888).build()
 
-        Sheets.Builder(httpTransport, jsonFactory, AuthorizationCodeInstalledApp(flow, receiver).authorize("user"))
-            .setApplicationName("Sheet Service")
-            .build()
+            Sheets.Builder(httpTransport, jsonFactory, AuthorizationCodeInstalledApp(flow, receiver).authorize("user"))
+                .setApplicationName("Sheet Service")
+                .build()
 
-    } catch (e: Exception) {
-        logger.error("An error occured while setting up connection to google: ", e)
-        null
+        } catch (e: Exception) {
+            logger.error("An error occured while setting up connection to google: ", e)
+            null
+        }
+
+        if (sheetService == null) {
+            logger.error("sheetService is null. Aborting...")
+            return
+        }
+
+        try {
+            // dummy test to see if the credentials need to be refreshed
+            sheetService.spreadsheets().values()
+                .get(GoogleSpreadSheetConfig.spreadSheetId, "A1:A1")
+                .execute()
+        } catch (e: Exception) {
+            logger.warn("Check for sheetService failed. Deleting token and trying again...")
+            File("$STORED_CREDENTIALS_TOKEN_FOLDER\\StoredCredential").delete()
+            continue
+        }
+
+        break
     }
 
     if (sheetService == null) {
