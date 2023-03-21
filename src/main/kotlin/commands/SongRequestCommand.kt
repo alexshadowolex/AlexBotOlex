@@ -14,7 +14,7 @@ import kotlin.time.Duration.Companion.seconds
 
 val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
-    description = "Add a spotify song to the current playlist. Either provide a name or a link. The links have to be spotify song links \"open.spotify.com/tracks\"",
+    description = "Add a spotify song to the current queue. Either provide a name or a link. The links have to be spotify song links \"open.spotify.com/tracks\"",
     handler = { arguments ->
         if (arguments.isEmpty()) {
             chat.sendMessage(TwitchBotConfig.channel, "No song given.")
@@ -36,7 +36,7 @@ val songRequestCommand = Command(
                                 artists.last()
                             ).filter { it.isNotBlank() }.joinToString(" and ")
                         }
-                    } has been added to the playlist ${TwitchBotConfig.songRequestEmotes.random()}"
+                    } has been added to the queue ${TwitchBotConfig.songRequestEmotes.random()}"
                 } ?: run {
                     "Couldn't add song to the queue. Either something went wrong or your query returned no result."
                 }
