@@ -115,7 +115,7 @@ suspend fun main() = try {
                     token = initialToken
                 ) {
                     onTokenRefresh = {
-                        logger.info("Token refreshed")
+                        logger.info("Spotify Token refreshed")
                     }
                     afterTokenRefresh = {
                         it.token.refreshToken = initialToken.refreshToken
@@ -283,8 +283,8 @@ fun startSpotifySongNameGetter() {
                 continue
             }
 
-            currentFileContent = currentSongString + " ".repeat(10)
-            currentSongFile.writeText(currentFileContent)
+            currentFileContent = currentSongString
+            currentSongFile.writeText(currentFileContent + " ".repeat(10))
         }
     }
 }
@@ -382,7 +382,7 @@ private val tableRange = "'${GoogleSpreadSheetConfig.sheetName}'!${GoogleSpreadS
 private const val GOOGLE_CREDENTIALS_FILE_PATH = "data\\google_credentials.json"
 private const val STORED_CREDENTIALS_TOKEN_FOLDER = "data\\tokens"
 
-private fun transformLetterFromToIndex(input: String): String {
+private fun transformLetterToIndex(input: String): String {
     val output: String
     val columnsNames = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     output = (if(input.filter { it.isLetter() } != "") {
@@ -448,7 +448,7 @@ private fun checkAndUpdateSpreadSheet() {
     val localContent = try {
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
         val existingFiles = soundAlertDirectory.listFiles()!!.filter { it.extension in TwitchBotConfig.allowedSoundFiles } as MutableList
-        val lineLength = transformLetterFromToIndex(GoogleSpreadSheetConfig.lastDataCell.filter { it.isLetter() }).toInt() - transformLetterFromToIndex(GoogleSpreadSheetConfig.firstDataCell.filter { it.isLetter() }).toInt() + 1
+        val lineLength = transformLetterToIndex(GoogleSpreadSheetConfig.lastDataCell.filter { it.isLetter() }).toInt() - transformLetterToIndex(GoogleSpreadSheetConfig.firstDataCell.filter { it.isLetter() }).toInt() + 1
         val output = mutableListOf<List<String>>()
 
         var i = 0

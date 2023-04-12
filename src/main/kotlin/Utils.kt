@@ -53,3 +53,10 @@ data class DiscordMessageContent (
         data class FromLink(val link: String) : Message
     }
 }
+
+fun String.pluralForm(number: Int) = when {
+    number == 1 -> this
+    endsWith("y") -> "${substringBeforeLast("y")}ies"
+    equals("is") -> "are"
+    else -> "${this}s"
+}
