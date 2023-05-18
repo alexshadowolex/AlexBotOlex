@@ -9,6 +9,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
+import isTtsEnabled
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
@@ -45,6 +46,12 @@ val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
     description = "Play TTS message. The given message has to be written behind the command.",
     handler = { arguments ->
+        if(!isTtsEnabled) {
+            logger.info("TTS is disabled, aborting command execution.")
+            chat.sendMessage(TwitchBotConfig.channel, "TTS is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            return@Command
+        }
+
         if (arguments.isEmpty()) {
             chat.sendMessage(TwitchBotConfig.channel, "No input provided.")
             logger.info("No TTS input provided.")

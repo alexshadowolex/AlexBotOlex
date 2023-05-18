@@ -12,6 +12,7 @@ import androidx.compose.ui.input.pointer.PointerIconDefaults
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import config.TwitchBotConfig
 import dev.kord.core.Kord
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +32,18 @@ val darkColorPalette = darkColors(
     onBackground = Color.White,
 )
 
+var isSongRequestEnabled = TwitchBotConfig.isSongRequestEnabledByDefault
+var isSoundAlertEnabled = TwitchBotConfig.isSoundAlertEnabledByDefault
+var isTtsEnabled = TwitchBotConfig.isTtsEnabledByDefault
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App(discordClient: Kord) {
     var messageForDiscord by remember { mutableStateOf("") }
+    val isSongRequestChecked = remember { mutableStateOf(TwitchBotConfig.isSongRequestEnabledByDefault) }
+    val isSoundAlertChecked = remember { mutableStateOf(TwitchBotConfig.isSoundAlertEnabledByDefault) }
+    val isTtsChecked = remember { mutableStateOf(TwitchBotConfig.isTtsEnabledByDefault) }
 
     MaterialTheme(colors = darkColorPalette) {
         Scaffold {
@@ -130,6 +138,74 @@ fun App(discordClient: Kord) {
                             Text(
                                 text = "Currently Playing: ${ClipPlayer.instance?.currentlyPlayingClip?.collectAsState()?.value ?: "Nothing"}"
                             )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 20.dp)
+                        ) {
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.3f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Song Request Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isSongRequestChecked.value,
+                                    onCheckedChange = {
+                                        isSongRequestChecked.value = it
+                                        isSongRequestEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.3f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Sound Alert Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isSoundAlertChecked.value,
+                                    onCheckedChange = {
+                                        isSoundAlertChecked.value = it
+                                        isSoundAlertEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.3f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "TTS Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isTtsChecked.value,
+                                    onCheckedChange = {
+                                        isTtsChecked.value = it
+                                        isTtsEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
                         }
 
                         Row(

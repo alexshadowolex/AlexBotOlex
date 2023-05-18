@@ -8,6 +8,7 @@ import config.TwitchBotConfig
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
+import isSongRequestEnabled
 import logger
 import spotifyClient
 import kotlin.time.Duration.Companion.seconds
@@ -16,6 +17,11 @@ val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
     description = "Add a spotify song to the current queue. Either provide a name or a link. The links have to be spotify song links \"open.spotify.com/tracks\"",
     handler = { arguments ->
+        if(!isSongRequestEnabled) {
+            logger.info("Song Requests are disabled, aborting command execution.")
+            chat.sendMessage(TwitchBotConfig.channel, "Song Requests are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            return@Command
+        }
         if (arguments.isEmpty()) {
             chat.sendMessage(TwitchBotConfig.channel, "No song given.")
             logger.warn("No arguments given")

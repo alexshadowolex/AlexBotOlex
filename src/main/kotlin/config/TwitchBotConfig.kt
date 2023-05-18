@@ -29,5 +29,9 @@ object TwitchBotConfig {
     val timerDurationMinutes: Duration = properties.getProperty("timer_duration_minutes").toInt().minutes
     val blacklistedUsers: List<String> = properties.getProperty("black_list_users").split(",")
     val blacklistEmote: String = properties.getProperty("blacklist_emote")
-
+    val isSongRequestEnabledByDefault: Boolean = properties.getProperty("is_song_request_enabled_by_default").toBoolean()
+    val isSoundAlertEnabledByDefault: Boolean = properties.getProperty("is_sound_alert_enabled_by_default").toBoolean()
+    val isTtsEnabledByDefault: Boolean = properties.getProperty("is_tts_enabled_by_default").toBoolean()
+    val commandDisabledEmote1: String = properties.getProperty("command_disabled_emote1")
+    val commandDisabledEmote2: String = properties.getProperty("command_disabled_emote2")
 }

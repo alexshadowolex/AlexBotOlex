@@ -3,6 +3,7 @@ package commands
 import Command
 import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
+import isSoundAlertEnabled
 import kotlinx.coroutines.*
 import logger
 import org.apache.commons.text.similarity.LevenshteinDistance
@@ -15,6 +16,11 @@ val soundAlertCommand: Command = Command(
     names = listOf("soundalert", "sa"),
     description = "Activate a sound alert. Following sound alerts exist: ${GoogleSpreadSheetConfig.soundAlertSpreadSheetLink}",
     handler = {arguments ->
+        if(!isSoundAlertEnabled) {
+            logger.info("Sound Alerts are disabled, aborting command execution.")
+            chat.sendMessage(TwitchBotConfig.channel, "Sound Alerts are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            return@Command
+        }
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
 
         if (!soundAlertDirectory.isDirectory) {
