@@ -32,7 +32,7 @@ dependencies {
     implementation("org.apache.commons:commons-text:1.10.0")
 
     implementation("com.github.kwhat:jnativehook:2.2.2")
-    implementation("com.github.twitch4j:twitch4j:1.12.0")
+    implementation("com.github.twitch4j:twitch4j:1.14.0")
     implementation("com.adamratzman:spotify-api-kotlin-core:3.8.8")
 
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
@@ -49,9 +49,9 @@ dependencies {
     implementation("io.ktor:ktor-server-partial-content:$ktorVersion")
     implementation("io.ktor:ktor-server-auto-head-response:$ktorVersion")
 
-    implementation("com.google.api-client:google-api-client:2.1.1")
+    implementation("com.google.api-client:google-api-client:2.2.0")
     implementation("com.google.oauth-client:google-oauth-client-jetty:1.34.1")
-    implementation("com.google.apis:google-api-services-sheets:v4-rev20221216-2.0.0")
+    implementation("com.google.apis:google-api-services-sheets:v4-rev20230227-2.0.0")
 
     implementation("dev.kord:kord-core:0.8.0-M16")
 

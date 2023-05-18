@@ -182,7 +182,19 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
         }
 
         val parts = message.substringAfter(TwitchBotConfig.commandPrefix).split(" ")
-        val command = commands.find { parts.first().lowercase() in it.names } ?: return@onEvent
+        // This feature has been built because of a_slowbro requesting too many screamy songs. The bot will not allow commands from blacklisted users
+        if(messageEvent.user.name in TwitchBotConfig.blacklistedUsers || messageEvent.user.id in TwitchBotConfig.blacklistedUsers){
+            twitchClient.chat.sendMessage(
+                TwitchBotConfig.channel,
+                "Imagine not being a blacklisted user. Couldn't be you ${messageEvent.user.name} ${TwitchBotConfig.blacklistEmote}"
+            )
+            if(messageEvent.user.id !in TwitchBotConfig.blacklistedUsers) {
+                logger.warn("Blacklisted user ${messageEvent.user.name} tried using a command. Please use following ID in the properties file instead of the name: ${messageEvent.user.id}")
+            }
+            return@onEvent
+        }
+
+        val command = commands.find { parts.first().substringAfter(TwitchBotConfig.commandPrefix).lowercase() in it.names } ?: return@onEvent
 
         if (TwitchBotConfig.onlyMods && CommandPermission.MODERATOR !in messageEvent.permissions) {
             twitchClient.chat.sendMessage(
