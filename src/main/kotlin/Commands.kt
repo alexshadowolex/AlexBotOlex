@@ -27,5 +27,6 @@ val commands = listOf(
     soundAlertCommand,
     sendClipCommand,
     feedbackCommand,
-    songCommand
+    songCommand,
+    queueCommand
 )

@@ -34,4 +34,5 @@ object TwitchBotConfig {
     val isTtsEnabledByDefault: Boolean = properties.getProperty("is_tts_enabled_by_default").toBoolean()
     val commandDisabledEmote1: String = properties.getProperty("command_disabled_emote1")
     val commandDisabledEmote2: String = properties.getProperty("command_disabled_emote2")
+    val thisEmote: String = properties.getProperty("this_emote")
 }
