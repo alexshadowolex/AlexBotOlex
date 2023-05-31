@@ -17,7 +17,7 @@ val songRequestCommand = Command(
     names = listOf("sr", "songrequest"),
     description = "Add a spotify song to the current queue. Either provide a name or a link. The links have to be spotify song links \"open.spotify.com/tracks\"",
     handler = { arguments ->
-        if(!isSongRequestEnabled) {
+        if(!isSongRequestEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
             logger.info("Song Requests are disabled, aborting command execution.")
             chat.sendMessage(TwitchBotConfig.channel, "Song Requests are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command

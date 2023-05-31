@@ -46,7 +46,7 @@ val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
     description = "Play TTS message. The given message has to be written behind the command.",
     handler = { arguments ->
-        if(!isTtsEnabled) {
+        if(!isTtsEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
             logger.info("TTS is disabled, aborting command execution.")
             chat.sendMessage(TwitchBotConfig.channel, "TTS is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command

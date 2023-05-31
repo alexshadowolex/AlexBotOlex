@@ -16,7 +16,7 @@ val soundAlertCommand: Command = Command(
     names = listOf("soundalert", "sa"),
     description = "Activate a sound alert. Following sound alerts exist: ${GoogleSpreadSheetConfig.soundAlertSpreadSheetLink}",
     handler = {arguments ->
-        if(!isSoundAlertEnabled) {
+        if(!isSoundAlertEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
             logger.info("Sound Alerts are disabled, aborting command execution.")
             chat.sendMessage(TwitchBotConfig.channel, "Sound Alerts are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command
