@@ -16,6 +16,7 @@ data class CommandHandlerScope(
     val chat: TwitchChat,
     val messageEvent: ChannelMessageEvent,
     val userIsPrivileged: Boolean,
+    val memeQueueHandler: MemeQueueHandler,
     var addedUserCooldown: Duration = Duration.ZERO,
     var addedCommandCooldown: Duration = Duration.ZERO
 )
@@ -28,5 +29,7 @@ val commands = listOf(
     sendClipCommand,
     feedbackCommand,
     songCommand,
-    queueCommand
+    queueCommand,
+    memeQueueCommand,
+    popMemeCommand
 )

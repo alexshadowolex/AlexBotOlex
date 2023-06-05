@@ -35,4 +35,5 @@ object TwitchBotConfig {
     val commandDisabledEmote1: String = properties.getProperty("command_disabled_emote1")
     val commandDisabledEmote2: String = properties.getProperty("command_disabled_emote2")
     val thisEmote: String = properties.getProperty("this_emote")
+    val worryStickEmote: String = properties.getProperty("worry_stick_emote")
 }

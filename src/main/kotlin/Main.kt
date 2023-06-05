@@ -169,6 +169,7 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
     val nextAllowedCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
     val nextAllowedCommandUsageInstantPerCommand = mutableMapOf<Command, Instant>()
 
+    val memeQueueHandler = MemeQueueHandler()
     twitchClient.chat.run {
         connect()
         joinChannel(TwitchBotConfig.channel)
@@ -237,6 +238,7 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
             discordClient = discordClient,
             chat = twitchClient.chat,
             messageEvent = messageEvent,
+            memeQueueHandler = memeQueueHandler,
             userIsPrivileged = CommandPermission.MODERATOR in messageEvent.permissions
         )
 
