@@ -1,6 +1,6 @@
-package commands
+package commands.discordCommunictation
 
-import Command
+import handler.Command
 import DiscordBotConfig
 import DiscordMessageContent
 import config.TwitchBotConfig

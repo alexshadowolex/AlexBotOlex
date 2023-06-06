@@ -1,7 +1,12 @@
-
+package handler
 import com.github.twitch4j.chat.TwitchChat
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
-import commands.*
+import commands.discordCommunictation.feedbackCommand
+import commands.discordCommunictation.sendClipCommand
+import commands.spotify.queueCommand
+import commands.spotify.songCommand
+import commands.spotify.songRequestCommand
+import commands.twitchOnly.*
 import dev.kord.core.Kord
 import kotlin.time.Duration
 

@@ -1,6 +1,6 @@
-package commands
+package commands.twitchOnly
 
-import Command
+import handler.Command
 import config.TwitchBotConfig
 import logger
 import kotlin.time.Duration.Companion.minutes
@@ -12,7 +12,7 @@ val memeQueueCommand: Command = Command(
         logger.info("Called memeQueueCommand with arguments ${arguments.joinToString(" ")}")
         val meme = arguments.joinToString(" ").trim()
         var coolDown = 5.minutes
-        
+
         val message = if(meme.isEmpty()) {
             coolDown = TwitchBotConfig.defaultUserCooldown
             "Dude you did not give a meme, shame on you ${TwitchBotConfig.commandDisabledEmote1}"

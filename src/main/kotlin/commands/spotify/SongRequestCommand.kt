@@ -1,6 +1,6 @@
-package commands
+package commands.spotify
 
-import Command
+import handler.Command
 import com.adamratzman.spotify.endpoints.pub.SearchApi
 import com.adamratzman.spotify.models.Track
 import com.adamratzman.spotify.utils.Market
@@ -8,7 +8,7 @@ import config.TwitchBotConfig
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
-import isSongRequestEnabled
+import ui.isSongRequestEnabled
 import logger
 import spotifyClient
 import kotlin.time.Duration.Companion.seconds

@@ -1,7 +1,7 @@
-package commands
+package commands.twitchOnly
 
-import Command
-import EMPTY_MEME_AND_USER
+import handler.Command
+import handler.EMPTY_MEME_AND_USER
 import config.TwitchBotConfig
 import logger
 

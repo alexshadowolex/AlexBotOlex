@@ -1,4 +1,5 @@
-
+package ui
+import ClipPlayerConfig
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,12 +13,16 @@ import androidx.compose.ui.input.pointer.PointerIconDefaults
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import backgroundCoroutineScope
 import config.TwitchBotConfig
 import dev.kord.core.Kord
+import handler.ClipPlayerHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import sendAnnouncementMessage
+import startTimer
 import java.awt.Desktop
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -136,7 +141,7 @@ fun App(discordClient: Kord) {
                                 .padding(top = 4.dp)
                         ) {
                             Text(
-                                text = "Currently Playing: ${ClipPlayer.instance?.currentlyPlayingClip?.collectAsState()?.value ?: "Nothing"}"
+                                text = "Currently Playing: ${ClipPlayerHandler.instance?.currentlyPlayingClip?.collectAsState()?.value ?: "Nothing"}"
                             )
                         }
 
@@ -220,7 +225,7 @@ fun App(discordClient: Kord) {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
-                                        ClipPlayer.instance?.resetPlaylistFile()
+                                        ClipPlayerHandler.instance?.resetPlaylistFile()
                                     }
                                 ) {
                                     Text(

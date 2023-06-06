@@ -25,7 +25,7 @@ import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.ValueRange
-import commands.soundAlertPlayerJob
+import commands.twitchOnly.soundAlertPlayerJob
 import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
 import dev.kord.core.Kord
@@ -34,6 +34,7 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.supplier.EntitySupplyStrategy
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
+import handler.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -55,6 +56,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.lang.time.DurationFormatUtils
 import org.slf4j.LoggerFactory
+import ui.App
+import ui.clipOverlayPage
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -313,7 +316,7 @@ private fun hostServer() {
             clipOverlayPage()
 
             webSocket("/socket") {
-                val clipPlayerInstance = ClipPlayer.instance ?: run {
+                val clipPlayerInstance = ClipPlayerHandler.instance ?: run {
                     close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "Clip player not setup."))
                     logger.error("Clip player not setup.")
                     return@webSocket

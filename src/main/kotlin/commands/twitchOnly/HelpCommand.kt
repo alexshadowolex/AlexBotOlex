@@ -1,7 +1,7 @@
-package commands
+package commands.twitchOnly
 
-import Command
-import commands
+import handler.Command
+import handler.commands
 import config.TwitchBotConfig
 
 val helpCommand: Command = Command(

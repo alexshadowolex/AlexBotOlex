@@ -1,6 +1,6 @@
-package commands
+package commands.spotify
 
-import Command
+import handler.Command
 import config.TwitchBotConfig
 import createSongString
 import getCurrentSpotifySong

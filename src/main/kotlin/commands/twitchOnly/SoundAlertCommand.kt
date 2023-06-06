@@ -1,9 +1,9 @@
-package commands
+package commands.twitchOnly
 
-import Command
+import handler.Command
 import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
-import isSoundAlertEnabled
+import ui.isSoundAlertEnabled
 import kotlinx.coroutines.*
 import logger
 import org.apache.commons.text.similarity.LevenshteinDistance

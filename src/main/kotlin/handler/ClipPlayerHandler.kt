@@ -1,9 +1,14 @@
+package handler
+
+import ClipPlayerConfig
+import json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import logger
 import java.io.File
 
-class ClipPlayer private constructor(
+class ClipPlayerHandler private constructor(
     private val clips: Set<String>,
     playedClips: Set<String>,
     private val playListFile: File
@@ -46,7 +51,7 @@ class ClipPlayer private constructor(
 
             logger.info("Clips in folder after applying playlist values ${ClipPlayerConfig.clipLocation}: ${clips.joinToString(" | ") { "$it: played = ${it in playedClips}" }}")
 
-            ClipPlayer(clips, playedClips, playListFile)
+            ClipPlayerHandler(clips, playedClips, playListFile)
         }
     }
 
