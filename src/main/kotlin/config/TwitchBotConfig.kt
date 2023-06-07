@@ -8,13 +8,12 @@ import kotlin.time.Duration.Companion.seconds
 
 object TwitchBotConfig {
     private val properties = Properties().apply {
-        load(File("data/twitchBotconfig.properties").inputStream())
+        load(File("data\\properties\\twitchBotConfig.properties").inputStream())
     }
 
+    val chatAccountToken = File("data\\tokens\\twitchToken.txt").readText()
     val channel: String = properties.getProperty("channel")
     val onlyMods = properties.getProperty("only_mods") == "true"
-    val spotifyClientId: String = properties.getProperty("spotify_client_id")
-    val spotifyClientSecret: String = properties.getProperty("spotify_client_secret")
     val commandPrefix: String = properties.getProperty("command_prefix")
     val songRequestEmotes: List<String> = properties.getProperty("song_request_emotes").split(",")
     val soundAlertDirectory: String = properties.getProperty("sound_alert_directory")
