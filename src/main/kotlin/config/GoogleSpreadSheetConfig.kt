@@ -5,7 +5,7 @@ import java.util.*
 
 object GoogleSpreadSheetConfig {
     private val properties = Properties().apply {
-        load(File("data\\googleSpreadSheetConfig.properties").inputStream())
+        load(File("data\\properties\\googleSpreadSheetConfig.properties").inputStream())
     }
 
     val spreadSheetId: String = properties.getProperty("spread_sheet_id")

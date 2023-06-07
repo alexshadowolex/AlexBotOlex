@@ -22,7 +22,7 @@ class ClipPlayerHandler private constructor(
                 return@run null
             }
 
-            val playListFile = File("data\\currentClipPlaylist.json")
+            val playListFile = File("data\\saveData\\currentClipPlaylist.json")
 
             val playedClips = if (!playListFile.exists()) {
                 playListFile.createNewFile()

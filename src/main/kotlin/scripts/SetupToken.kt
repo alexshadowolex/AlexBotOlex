@@ -1,9 +1,9 @@
 package scripts
 
-import config.TwitchBotConfig
 import com.adamratzman.spotify.SpotifyScope
 import com.adamratzman.spotify.getSpotifyAuthorizationUrl
 import com.adamratzman.spotify.spotifyClientApi
+import config.SpotifyConfig
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.awt.Desktop
@@ -18,7 +18,7 @@ suspend fun main() {
         URI.create(
             getSpotifyAuthorizationUrl(
                 scopes = SpotifyScope.values(),
-                clientId = TwitchBotConfig.spotifyClientId,
+                clientId = SpotifyConfig.spotifyClientId,
                 redirectUri = redirectUri
             )
         )
@@ -29,8 +29,8 @@ suspend fun main() {
 
     val api = spotifyClientApi {
         credentials {
-            clientId = TwitchBotConfig.spotifyClientId
-            clientSecret = TwitchBotConfig.spotifyClientSecret
+            clientId = SpotifyConfig.spotifyClientId
+            clientSecret = SpotifyConfig.spotifyClientSecret
             this.redirectUri = redirectUri
         }
 
@@ -40,5 +40,5 @@ suspend fun main() {
     }.build()
 
     println("Token: " + Json.encodeToString(api.token))
-    File("data/spotifytoken.json").writeText(Json.encodeToString(api.token))
+    File("data\\tokens\\spotifyToken.json").writeText(Json.encodeToString(api.token))
 }

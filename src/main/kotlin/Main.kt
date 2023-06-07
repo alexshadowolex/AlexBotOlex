@@ -27,6 +27,7 @@ import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.ValueRange
 import commands.twitchOnly.soundAlertPlayerJob
 import config.GoogleSpreadSheetConfig
+import config.SpotifyConfig
 import config.TwitchBotConfig
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createEmbed
@@ -93,8 +94,7 @@ suspend fun main() = try {
 
     checkAndUpdateSpreadSheet()
 
-    val discordToken = File("data/discordtoken.txt").readText()
-    val discordClient = Kord(discordToken)
+    val discordClient = Kord(DiscordBotConfig.discordToken)
 
     logger.info("Discord client started.")
 
@@ -104,7 +104,7 @@ suspend fun main() = try {
             intents += Intent.MessageContent
         }
     }
-    val initialToken: Token = Json.decodeFromString(File("data/spotifytoken.json").readText())
+    val initialToken: Token = Json.decodeFromString(File("data\\tokens\\spotifyToken.json").readText())
 
     hostServer()
 
@@ -112,8 +112,8 @@ suspend fun main() = try {
         DisposableEffect(Unit) {
             spotifyClient = runBlocking {
                 spotifyClientApi(
-                    clientId = TwitchBotConfig.spotifyClientId,
-                    clientSecret = TwitchBotConfig.spotifyClientSecret,
+                    clientId = SpotifyConfig.spotifyClientId,
+                    clientSecret = SpotifyConfig.spotifyClientSecret,
                     redirectUri = "https://www.example.com",
                     token = initialToken
                 ) {
@@ -123,7 +123,7 @@ suspend fun main() = try {
                     afterTokenRefresh = {
                         it.token.refreshToken = initialToken.refreshToken
                         try {
-                            File("data/spotifytoken.json").writeText(json.encodeToString(it.token.copy(refreshToken = initialToken.refreshToken)))
+                            File("data\\tokens\\spotifyToken.json").writeText(json.encodeToString(it.token.copy(refreshToken = initialToken.refreshToken)))
                         } catch(e: Exception) {
                             logger.error("Error occured while saving new token", e)
                         }
@@ -161,12 +161,11 @@ suspend fun main() = try {
 }
 
 private fun setupTwitchBot(discordClient: Kord): TwitchClient {
-    val chatAccountToken = File("data/twitchtoken.txt").readText()
 
     val twitchClient = TwitchClientBuilder.builder()
         .withEnableHelix(true)
         .withEnableChat(true)
-        .withChatAccount(OAuth2Credential("twitch", chatAccountToken))
+        .withChatAccount(OAuth2Credential("twitch", TwitchBotConfig.chatAccountToken))
         .build()
 
     val nextAllowedCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
@@ -281,7 +280,7 @@ fun createSongString(song: Track): String {
 private const val CURRENT_SONG_FILE_NAME = "currentSong.txt"
 fun startSpotifySongNameGetter() {
     CoroutineScope(Dispatchers.IO).launch {
-        val currentSongFile = File("data\\$CURRENT_SONG_FILE_NAME")
+        val currentSongFile = File("data\\displayFiles\\$CURRENT_SONG_FILE_NAME")
         var currentFileContent = if(currentSongFile.exists()) {
             currentSongFile.readText()
         } else {
@@ -396,7 +395,7 @@ suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Ko
 }
 
 private val tableRange = "'${GoogleSpreadSheetConfig.sheetName}'!${GoogleSpreadSheetConfig.firstDataCell}:${GoogleSpreadSheetConfig.lastDataCell}"
-private const val GOOGLE_CREDENTIALS_FILE_PATH = "data\\google_credentials.json"
+private const val GOOGLE_CREDENTIALS_FILE_PATH = "data\\tokens\\google_credentials.json"
 private const val STORED_CREDENTIALS_TOKEN_FOLDER = "data\\tokens"
 
 private fun transformLetterToIndex(input: String): String {

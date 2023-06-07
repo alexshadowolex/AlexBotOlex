@@ -10,7 +10,7 @@ import java.io.File
 val EMPTY_MEME_AND_USER = MemeAndUser("", "")
 
 class MemeQueueHandler {
-    private var memeQueueSaveFile = File("data\\memeQueue.json")
+    private var memeQueueSaveFile = File("data\\saveData\\memeQueue.json")
 
     private var memeQueue = listOf<MemeAndUser>()
         private set(value) {

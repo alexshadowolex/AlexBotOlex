@@ -36,5 +36,6 @@ val commands = listOf(
     songCommand,
     queueCommand,
     memeQueueCommand,
-    popMemeCommand
+    popMemeCommand,
+    raidMessageCommand
 )

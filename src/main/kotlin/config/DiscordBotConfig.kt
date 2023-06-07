@@ -6,9 +6,10 @@ import java.util.*
 
 object DiscordBotConfig {
     private val properties = Properties().apply {
-        load(File("data/discordBotconfig.properties").inputStream())
+        load(File("data\\properties\\discordBotConfig.properties").inputStream())
     }
 
+    val discordToken = File("data\\tokens\\discordToken.txt").readText()
     val announcementChannelId = Snowflake(properties.getProperty("announcement_channel_id").toLong())
     val announcementUsers: List<String> = properties.getProperty("announcement_users").split(",")
     val embedAccentColor = Color(properties.getProperty("embed_accent_color").toInt(radix = 16))
