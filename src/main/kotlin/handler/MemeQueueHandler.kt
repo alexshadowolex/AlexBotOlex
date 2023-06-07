@@ -33,10 +33,10 @@ class MemeQueueHandler {
                 try {
                     logger.warn("\n" + memeQueueSaveFile.readText())
                 } catch (e: Exception) {
-                    logger.error("Something went wrong with reading the file content yet again. Aborting...")
+                    logger.error("Something went wrong with reading the meme queue file content yet again. Aborting...")
                     throw ExceptionInInitializerError()
                 }
-                logger.info("Initializing empty list!")
+                logger.info("Initializing empty list for meme queue!")
                 mutableListOf()
             }
         }
