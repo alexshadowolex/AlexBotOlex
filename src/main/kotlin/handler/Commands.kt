@@ -22,6 +22,7 @@ data class CommandHandlerScope(
     val messageEvent: ChannelMessageEvent,
     val userIsPrivileged: Boolean,
     val memeQueueHandler: MemeQueueHandler,
+    val channelPointsHandler: ChannelPointsHandler,
     var addedUserCooldown: Duration = Duration.ZERO,
     var addedCommandCooldown: Duration = Duration.ZERO
 )

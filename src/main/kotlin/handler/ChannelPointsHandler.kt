@@ -1,12 +1,13 @@
 package handler
 
+import com.github.twitch4j.TwitchClient
 import json
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import logger
 import java.io.File
 
-class ChannelPointsHandler {
+class ChannelPointsHandler(private val twitchClient: TwitchClient) {
     private var channelPointsSaveFile = File("data\\channelPointsPerUser.json")
 
     private var pointsPerUser = mutableMapOf</* user ID: */String, /* points: */Int>()
@@ -37,5 +38,11 @@ class ChannelPointsHandler {
                 mutableMapOf()
             }
         }
+
+        initializeChannelPointsTracking()
+    }
+
+    private fun initializeChannelPointsTracking() {
+        
     }
 }

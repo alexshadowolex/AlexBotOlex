@@ -177,6 +177,7 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
         joinChannel(TwitchBotConfig.channel)
         sendMessage(TwitchBotConfig.channel, "Bot running peepoArrive")
     }
+    val channelPointsHandler = ChannelPointsHandler(twitchClient)
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
         val message = messageEvent.message
@@ -241,6 +242,7 @@ private fun setupTwitchBot(discordClient: Kord): TwitchClient {
             chat = twitchClient.chat,
             messageEvent = messageEvent,
             memeQueueHandler = memeQueueHandler,
+            channelPointsHandler = channelPointsHandler,
             userIsPrivileged = CommandPermission.MODERATOR in messageEvent.permissions
         )
 
