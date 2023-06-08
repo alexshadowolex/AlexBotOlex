@@ -1,10 +1,10 @@
 package commands.spotify
 
-import handler.Command
 import config.TwitchBotConfig
+import handler.Command
 
-val queueCommand: Command = Command(
-    names = listOf("queue", "q"),
+val spotifyQueueCommand: Command = Command(
+    names = listOf("spotifyqueue", "sq"),
     description = "Displays the current spotify queue, which are the songs added via song requests.",
     handler = {
 
