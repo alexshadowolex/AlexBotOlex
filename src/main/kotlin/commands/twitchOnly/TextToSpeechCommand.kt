@@ -1,7 +1,7 @@
 package commands.twitchOnly
 
-import handler.Command
 import config.TwitchBotConfig
+import handler.Command
 import httpClient
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -9,12 +9,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
-import ui.isTtsEnabled
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
+import ui.isTtsEnabled
 import java.io.File
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -110,7 +110,7 @@ private val ttsPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
 val ttsPlayerJob = ttsPlayerCoroutineScope.launch {
     while (isActive) {
         ttsQueue.removeFirstOrNull()?.let { entry ->
-            ProcessBuilder("ffplay", "-af", "volume=2", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
+            ProcessBuilder("ffplay", "-af", "volume=1", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
                 inheritIO()
             }.start().onExit().await()
 
