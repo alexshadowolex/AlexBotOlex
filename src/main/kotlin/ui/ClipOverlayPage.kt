@@ -1,5 +1,4 @@
 package ui
-
 import ClipPlayerConfig
 import io.ktor.server.application.*
 import io.ktor.server.html.*
@@ -97,7 +96,7 @@ fun Route.clipOverlayPage() {
 
                 script {
                     unsafe {
-                        raw((object { })::class.java.getResource("..\\ClipOverlayPageLogic.js")!!.readText())
+                        raw((object { })::class.java.getResource("/ClipOverlayPageLogic.js")!!.readText())
                     }
                 }
             }
