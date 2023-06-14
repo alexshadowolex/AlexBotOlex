@@ -97,7 +97,7 @@ fun Route.clipOverlayPage() {
 
                 script {
                     unsafe {
-                        raw((object { })::class.java.getResource("ClipOverlayPageLogic.js")!!.readText())
+                        raw((object { })::class.java.getResource("..\\ClipOverlayPageLogic.js")!!.readText())
                     }
                 }
             }

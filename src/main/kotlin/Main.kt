@@ -535,7 +535,7 @@ private fun checkAndUpdateSpreadSheet() {
     }
 }
 
-private const val TIMER_FILE_NAME = "data\\timer.txt"
+private const val TIMER_FILE_NAME = "data\\displayFiles\\timer.txt"
 fun startTimer() {
     val timerFile = File(TIMER_FILE_NAME)
     if(!timerFile.exists()) {
