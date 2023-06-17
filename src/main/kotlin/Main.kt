@@ -92,7 +92,7 @@ val backgroundCoroutineScope = CoroutineScope(Dispatchers.IO)
 suspend fun main() = try {
     setupLogging()
 
-    checkAndUpdateSpreadSheet()
+    checkAndUpdateSpreadSheets()
 
     val discordClient = Kord(DiscordBotConfig.discordToken)
 
@@ -394,7 +394,6 @@ suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Ko
     logger.info("Message created on Discord Channel $channelName")
 }
 
-private val tableRange = "'${GoogleSpreadSheetConfig.sheetName}'!${GoogleSpreadSheetConfig.firstDataCell}:${GoogleSpreadSheetConfig.lastDataCell}"
 private const val GOOGLE_CREDENTIALS_FILE_PATH = "data\\tokens\\google_credentials.json"
 private const val STORED_CREDENTIALS_TOKEN_FOLDER = "data\\tokens"
 
@@ -410,7 +409,7 @@ private fun transformLetterToIndex(input: String): String {
     return output
 }
 
-private fun checkAndUpdateSpreadSheet() {
+private fun setupSheetService(): Sheets? {
     var sheetService: Sheets? = null
     for(i in 0..1) {
         sheetService = try {
@@ -438,13 +437,13 @@ private fun checkAndUpdateSpreadSheet() {
 
         if (sheetService == null) {
             logger.error("sheetService is null. Aborting...")
-            return
+            return null
         }
 
         try {
             // dummy test to see if the credentials need to be refreshed
             sheetService.spreadsheets().values()
-                .get(GoogleSpreadSheetConfig.spreadSheetId, "A1:A1")
+                .get(GoogleSpreadSheetConfig.soundAlertSpreadSheetId, "A1:A1")
                 .execute()
         } catch (e: Exception) {
             logger.warn("Check for sheetService failed. Deleting token and trying again...")
@@ -455,16 +454,16 @@ private fun checkAndUpdateSpreadSheet() {
         break
     }
 
-    if (sheetService == null) {
-        logger.error("sheetService is null. Aborting...")
-        return
-    }
-    logger.info("Connected to google spread sheet service")
 
-    val localContent = try {
+    return sheetService
+}
+
+private fun getLocalSoundAlerts(): List<List<String>>? {
+
+    return try {
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
         val existingFiles = soundAlertDirectory.listFiles()!!.filter { it.extension in TwitchBotConfig.allowedSoundFiles } as MutableList
-        val lineLength = transformLetterToIndex(GoogleSpreadSheetConfig.lastDataCell.filter { it.isLetter() }).toInt() - transformLetterToIndex(GoogleSpreadSheetConfig.firstDataCell.filter { it.isLetter() }).toInt() + 1
+        val lineLength = transformLetterToIndex(GoogleSpreadSheetConfig.soundAlertLastDataCell.filter { it.isLetter() }).toInt() - transformLetterToIndex(GoogleSpreadSheetConfig.soundAlertFirstDataCell.filter { it.isLetter() }).toInt() + 1
         val output = mutableListOf<List<String>>()
 
         var i = 0
@@ -485,7 +484,7 @@ private fun checkAndUpdateSpreadSheet() {
             i++
         }
 
-        for (j in output.size..GoogleSpreadSheetConfig.lastDataCell.filter { it.isDigit() }.toInt() - GoogleSpreadSheetConfig.firstDataCell.filter { it.isDigit() }.toInt()) {
+        for (j in output.size..GoogleSpreadSheetConfig.soundAlertLastDataCell.filter { it.isDigit() }.toInt() - GoogleSpreadSheetConfig.soundAlertFirstDataCell.filter { it.isDigit() }.toInt()) {
             output.add(listOf<String>().let {
                 var output2 = it
                 for (k in 0 until lineLength) {
@@ -499,26 +498,62 @@ private fun checkAndUpdateSpreadSheet() {
         logger.error("An error occurred while reading local files ", e)
         null
     }
+}
 
-    if(localContent == null) {
-        logger.error("localContent is null. Aborting...")
-        return
+private fun getExistingCommands(): List<List<String>> {
+    val output = mutableListOf<List<String>>()
+    for(command in commands) {
+        output.add(listOf(
+            command.names.joinToString("|") { "${TwitchBotConfig.commandPrefix}${it}" },
+            command.description
+        ))
     }
 
-    logger.info("Created list of local content")
+    output.sortBy { it[0] }
+
+    return output
+}
+
+private val spreadSheetVariables = object {
+    val spreadSheetId = listOf(
+        GoogleSpreadSheetConfig.soundAlertSpreadSheetId,
+        GoogleSpreadSheetConfig.commandListSpreadSheetId
+    )
+    val sheetName = listOf(
+        GoogleSpreadSheetConfig.soundAlertSheetName,
+        GoogleSpreadSheetConfig.commandListSheetName
+    )
+    val tableRangeCells = listOf(
+        "!${GoogleSpreadSheetConfig.soundAlertFirstDataCell}:${GoogleSpreadSheetConfig.soundAlertLastDataCell}",
+        "!${GoogleSpreadSheetConfig.commandListFirstDataCell}:${GoogleSpreadSheetConfig.commandListLastDataCell}"
+    )
+    val lastUpdatedCell = listOf(
+        GoogleSpreadSheetConfig.soundAlertLastUpdatedCell,
+        GoogleSpreadSheetConfig.commandListLastUpdatedCell
+    )
+}
+
+private enum class SpreadSheetType {
+    SoundAlert, CommandList
+}
+
+private fun updateSpreadSheetList(sheetService: Sheets, localValues: List<List<String>>, spreadSheetType: SpreadSheetType) {
+    val spreadSheetTypeOrdinal = spreadSheetType.ordinal
 
     @Suppress("UNCHECKED_CAST")
     val body: ValueRange = ValueRange()
-        .setValues(localContent as List<MutableList<Any>>?)
+        .setValues(localValues as List<MutableList<Any>>?)
+
+    val tableRange = "'${spreadSheetVariables.sheetName[spreadSheetTypeOrdinal]}'${spreadSheetVariables.tableRangeCells[spreadSheetTypeOrdinal]}"
 
     try {
-        sheetService.spreadsheets().values().update(GoogleSpreadSheetConfig.spreadSheetId, tableRange, body)
+        sheetService.spreadsheets().values().update(spreadSheetVariables.spreadSheetId[spreadSheetTypeOrdinal], tableRange, body)
             .setValueInputOption("RAW")
             .execute()
 
         sheetService.spreadsheets().values().update(
-            GoogleSpreadSheetConfig.spreadSheetId,
-            GoogleSpreadSheetConfig.sheetName + "!" + GoogleSpreadSheetConfig.lastUpdatedCell,
+            spreadSheetVariables.spreadSheetId[spreadSheetTypeOrdinal],
+            spreadSheetVariables.sheetName[spreadSheetTypeOrdinal] + "!" + spreadSheetVariables.lastUpdatedCell[spreadSheetTypeOrdinal],
             ValueRange().setValues(
                 listOf(
                     listOf(
@@ -531,8 +566,42 @@ private fun checkAndUpdateSpreadSheet() {
             .setValueInputOption("RAW")
             .execute()
     } catch (e: Exception) {
-        logger.error("Updating Spread Sheet failed ", e)
+        logger.error("Updating Spread Sheet ${spreadSheetType.name} failed ", e)
     }
+}
+
+private fun checkAndUpdateSpreadSheets() {
+    val sheetService = setupSheetService()
+
+    if (sheetService == null) {
+        logger.error("sheetService is null. Aborting...")
+        return
+    }
+    logger.info("Connected to google spread sheet service")
+
+    val localSoundAlerts = getLocalSoundAlerts()
+    if(localSoundAlerts == null) {
+        logger.error("localSoundAlerts is null. Aborting the spread sheet update")
+    } else {
+        logger.info("Created list of local sound alerts")
+
+        updateSpreadSheetList(sheetService, localSoundAlerts, SpreadSheetType.SoundAlert)
+
+        logger.info("Updated sound alert spread sheet")
+    }
+
+    val existingCommands = getExistingCommands()
+    if(existingCommands.isEmpty()) {
+        logger.error("existingCommands is empty. Aborting the spread sheet update")
+    } else {
+        logger.info("Created list of existing commands")
+
+        updateSpreadSheetList(sheetService, existingCommands, SpreadSheetType.CommandList)
+
+        logger.info("Updated command list spread sheet")
+    }
+
+    logger.info("Finished updating spread sheets")
 }
 
 private const val TIMER_FILE_NAME = "data\\displayFiles\\timer.txt"

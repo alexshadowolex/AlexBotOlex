@@ -1,18 +1,15 @@
 package commands.twitchOnly
 
+import config.GoogleSpreadSheetConfig
+import config.TwitchBotConfig
 import handler.Command
 import handler.commands
-import config.TwitchBotConfig
 
 val helpCommand: Command = Command(
     names = listOf("help"),
     description = "Displays all available commands. If a valid command is given as argument, the description of said command will be displayed instead.",
     handler = { arguments ->
-        var message =
-            """ 
-                Available commands: 
-                ${commands.joinToString("; ") { command -> command.names.joinToString("|") { "${TwitchBotConfig.commandPrefix}${it}" } }}.
-            """.trimIndent()
+        var message = "Following commands exist: ${GoogleSpreadSheetConfig.commandListSpreadSheetLink}"
 
         val command = commands.find { arguments.firstOrNull()?.lowercase() in it.names }
         if (command != null) {
