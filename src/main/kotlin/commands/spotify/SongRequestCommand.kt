@@ -1,16 +1,18 @@
 package commands.spotify
 
-import handler.Command
 import com.adamratzman.spotify.endpoints.pub.SearchApi
 import com.adamratzman.spotify.models.Track
 import com.adamratzman.spotify.utils.Market
+import config.SpotifyConfig
 import config.TwitchBotConfig
+import handler.Command
 import httpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
-import ui.isSongRequestEnabled
 import logger
 import spotifyClient
+import ui.isSongRequestEnabled
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 val songRequestCommand = Command(
@@ -44,7 +46,7 @@ val songRequestCommand = Command(
                         }
                     } has been added to the queue ${TwitchBotConfig.songRequestEmotes.random()}"
                 } ?: run {
-                    "Couldn't add song to the queue. Either something went wrong or your query returned no result."
+                    "Couldn't add song to the queue. Either the song was longer than ${SpotifyConfig.maximumLengthSongRequest}, your query returned no result or something went wrong."
                 }
             )
 
@@ -83,6 +85,10 @@ suspend fun updateQueue(query: String): Track? {
     }
 
     logger.info("Result after search: $result")
+    if(result.length.milliseconds > SpotifyConfig.maximumLengthSongRequest) {
+        logger.info("Song length ${result.length / 60000f} was longer than ${SpotifyConfig.maximumLengthSongRequest}")
+        return null
+    }
 
     try {
         val responseStatusCode = httpClient.post("https://api.spotify.com/v1/me/player/queue") {
