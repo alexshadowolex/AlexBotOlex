@@ -1,13 +1,15 @@
 package commands.twitchOnly
 
-import handler.Command
+import com.github.twitch4j.chat.TwitchChat
 import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
-import ui.isSoundAlertEnabled
+import handler.Command
 import kotlinx.coroutines.*
 import logger
 import org.apache.commons.text.similarity.LevenshteinDistance
+import ui.isSoundAlertEnabled
 import java.io.File
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 
 private val soundAlertQueue = mutableListOf<File>()
@@ -32,27 +34,27 @@ val soundAlertCommand: Command = Command(
 
         var tmpUserCooldown = TwitchBotConfig.defaultUserCooldown
         var tmpCommandCooldown = TwitchBotConfig.defaultCommandCooldown
-        if (query.isEmpty()) {
-            soundAlertQueue.add(
-                soundAlertDirectory.listFiles()!!
-                    .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
-                    .random()
-            )
+        val soundAlertFile = if (query.isEmpty()) {
+            soundAlertDirectory.listFiles()!!
+                .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
+                .random()
         } else {
-            val soundAlertFile = soundAlertDirectory.listFiles()!!
+            soundAlertDirectory.listFiles()!!
                 .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
                 .map { it to LevenshteinDistance.getDefaultInstance().apply(it.nameWithoutExtension.lowercase(), query) }
                 .minByOrNull { (_, levenshteinDistance) -> levenshteinDistance }
                 ?.takeIf { (_, levenshteinDistance) -> levenshteinDistance < TwitchBotConfig.levenshteinThreshold }
                 ?.first
+        }
 
-            soundAlertFile?.let {
-                soundAlertQueue.add(it)
-            } ?: run {
-                chat.sendMessage(TwitchBotConfig.channel, "Mad bro? Couldn't find a fitting sound alert.")
-                tmpUserCooldown = 5.seconds
-                tmpCommandCooldown = 5.seconds
-            }
+        if(soundAlertFile != null) {
+            soundAlertQueue.add(soundAlertFile)
+
+            handleBustinSoundAlert(soundAlertFile, chat)
+        } else {
+            chat.sendMessage(TwitchBotConfig.channel, "Mad bro? Couldn't find a fitting sound alert.")
+            tmpUserCooldown = 5.seconds
+            tmpCommandCooldown = 5.seconds
         }
         addedUserCooldown = tmpUserCooldown
         addedCommandCooldown = tmpCommandCooldown
@@ -86,6 +88,29 @@ val soundAlertPlayerJob = soundAlertPlayerCoroutineScope.launch {
             delay(3.seconds)
         } else {
             delay(1.seconds)
+        }
+    }
+}
+
+private const val BUSTIN_SOUND_ALERT_NAME = "bustin.mp3"
+private suspend fun handleBustinSoundAlert(soundAlertFile: File, chat: TwitchChat) {
+    val bustinSoundAlertFile = File(TwitchBotConfig.soundAlertDirectory + "\\$BUSTIN_SOUND_ALERT_NAME")
+    if(!bustinSoundAlertFile.exists()) {
+        return
+    }
+
+    if(soundAlertFile == bustinSoundAlertFile) {
+        val bustinEmote = "Bustin "
+        delay(1.5.seconds)
+
+        for (i in 1..6) {
+            val amount = if(i <= 3) {
+                i
+            } else {
+                abs(i - 6)
+            }
+            chat.sendMessage(TwitchBotConfig.channel, bustinEmote.repeat(amount))
+            delay(0.5.seconds)
         }
     }
 }
