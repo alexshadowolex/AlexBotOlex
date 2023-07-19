@@ -37,4 +37,5 @@ object TwitchBotConfig {
     val worryStickEmote: String = properties.getProperty("worry_stick_emote")
     val raidMessageText: String = properties.getProperty("raid_message_text")
     val raidMessageAmountRepetitions = properties.getProperty("raid_message_amount_repetitions").toInt()
+    val shrugEmote: String = properties.getProperty("shrug_emote")
 }

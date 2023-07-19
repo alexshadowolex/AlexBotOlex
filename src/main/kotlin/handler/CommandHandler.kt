@@ -6,6 +6,7 @@ import commands.discordCommunictation.sendClipCommand
 import commands.spotify.songCommand
 import commands.spotify.songRequestCommand
 import commands.spotify.spotifyQueueCommand
+import commands.spotify.voteSkipCommand
 import commands.twitchOnly.*
 import dev.kord.core.Kord
 import kotlin.time.Duration
@@ -37,5 +38,6 @@ val commands = listOf(
     spotifyQueueCommand,
     memeQueueCommand,
     popMemeCommand,
-    raidMessageCommand
+    raidMessageCommand,
+    voteSkipCommand
 )
