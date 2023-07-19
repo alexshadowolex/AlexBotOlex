@@ -6,8 +6,6 @@ import com.adamratzman.spotify.utils.Market
 import config.SpotifyConfig
 import config.TwitchBotConfig
 import handler.Command
-import httpClient
-import io.ktor.client.request.*
 import io.ktor.http.*
 import logger
 import spotifyClient
@@ -91,18 +89,7 @@ suspend fun updateQueue(query: String): Track? {
     }
 
     try {
-        val responseStatusCode = httpClient.post("https://api.spotify.com/v1/me/player/queue") {
-            header("Authorization", "Bearer ${spotifyClient.token.accessToken}")
-
-            url {
-                parameters.append("uri", result.uri.uri)
-            }
-        }.status
-
-        if(responseStatusCode != HttpStatusCode.NoContent) {
-            logger.error("HTTP Response was not 204, something went wrong.")
-            return null
-        }
+        spotifyClient.player.addItemToEndOfQueue(result.uri)
         logger.info("Result URI: ${result.uri.uri}")
     } catch (e: Exception) {
         logger.error("Spotify is probably not set up.", e)
