@@ -72,9 +72,9 @@ suspend fun updateQueue(query: String): Track? {
             spotifyClient.search.search(
                 query = query,
                 searchTypes = arrayOf(
-                    SearchApi.SearchType.ARTIST,
-                    SearchApi.SearchType.ALBUM,
-                    SearchApi.SearchType.TRACK
+                    SearchApi.SearchType.Artist,
+                    SearchApi.SearchType.Album,
+                    SearchApi.SearchType.Track
                 ),
                 market = Market.DE
             ).tracks?.firstOrNull()
