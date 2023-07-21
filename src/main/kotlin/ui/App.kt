@@ -70,6 +70,7 @@ fun App(discordClient: Kord) {
                             onValueChange = { value ->
                                 messageForDiscord = value
                             },
+                            singleLine = true,
                             modifier = Modifier
                                 .padding(end = 12.dp)
                                 .fillMaxWidth()
