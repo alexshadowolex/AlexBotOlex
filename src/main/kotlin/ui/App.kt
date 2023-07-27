@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -41,7 +40,6 @@ var isSongRequestEnabled = TwitchBotConfig.isSongRequestEnabledByDefault
 var isSoundAlertEnabled = TwitchBotConfig.isSoundAlertEnabledByDefault
 var isTtsEnabled = TwitchBotConfig.isTtsEnabledByDefault
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App(discordClient: Kord) {

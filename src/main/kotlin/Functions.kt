@@ -68,26 +68,21 @@ private const val CURRENT_SONG_FILE_NAME = "currentSong.txt"
 fun startSpotifySongNameGetter() {
     CoroutineScope(Dispatchers.IO).launch {
         val currentSongFile = File("data\\displayFiles\\$CURRENT_SONG_FILE_NAME")
-        var currentFileContent = if(currentSongFile.exists()) {
-            currentSongFile.readText()
-        } else {
+        var currentFileContent: String
+        if(!currentSongFile.exists()) {
             withContext(Dispatchers.IO) {
                 currentSongFile.createNewFile()
             }
-            ""
         }
+
         while(isActive) {
-            delay(0.5.seconds)
             val currentTrack = getCurrentSpotifySong() ?: continue
 
             val currentSongString = createSongString(currentTrack)
 
-            if(currentFileContent == currentSongString) {
-                continue
-            }
-
             currentFileContent = currentSongString
             currentSongFile.writeText(currentFileContent + " ".repeat(10))
+            delay(2.seconds)
         }
     }
 }

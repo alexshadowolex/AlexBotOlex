@@ -58,7 +58,7 @@ val voteSkipCommand: Command = Command(
                 logger.info("Started voting for skip. Variables - currentSong.name: ${currentSong?.name} | voteTimeEnd: $voteTimeEnd")
                 startVoteController(chat)
 
-                chat.sendMessage(TwitchBotConfig.channel, "Voting started and will end in $VOTING_TIME")
+                chat.sendMessage(TwitchBotConfig.channel, "Voting for skip started and will end in $VOTING_TIME. Type \"${TwitchBotConfig.commandPrefix}vs yes\" or \"${TwitchBotConfig.commandPrefix}vs no\" to vote")
             }
 
             currentVotesPerUser[messageEvent.user] = vote
