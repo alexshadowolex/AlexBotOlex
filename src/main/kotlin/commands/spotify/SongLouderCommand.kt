@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import logger
-import spotifyClient
+import resetSpotifyVolumeToDefault
+import setSpotifyVolume
 import kotlin.time.Duration.Companion.seconds
 
 private val VOTE_OPTIONS = object {
@@ -86,7 +87,7 @@ private suspend fun startVoteController(chat: TwitchChat) {
             if(amountYes >= amountNo * 1.5) {
                 try {
                     logger.info("Making song louder")
-                    spotifyClient.player.setVolume(SpotifyConfig.songLouderIncreasedVolume)
+                    setSpotifyVolume(SpotifyConfig.songLouderIncreasedVolume)
                     startVolumeResetHandler(currentSong)
                     "Making song ${currentSong?.name} louder ${TwitchBotConfig.peepoDjEmote}"
                 } catch (e: Exception) {
@@ -118,6 +119,6 @@ private fun startVolumeResetHandler(currentSong: Track?) {
         do {
             delay(2.seconds)
         } while (currentSong == getCurrentSpotifySong())
-        spotifyClient.player.setVolume(SpotifyConfig.defaultVolume)
+        resetSpotifyVolumeToDefault()
     }
 }

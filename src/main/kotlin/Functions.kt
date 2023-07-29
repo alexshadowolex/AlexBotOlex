@@ -11,6 +11,7 @@ import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.ValueRange
 import config.GoogleSpreadSheetConfig
+import config.SpotifyConfig
 import config.TwitchBotConfig
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createEmbed
@@ -85,6 +86,14 @@ fun startSpotifySongNameGetter() {
             delay(2.seconds)
         }
     }
+}
+
+suspend fun setSpotifyVolume(volume: Int) {
+    spotifyClient.player.setVolume(volume)
+}
+
+suspend fun resetSpotifyVolumeToDefault() {
+    setSpotifyVolume(SpotifyConfig.defaultVolume)
 }
 
 // Local Server hosting

@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import resetSpotifyVolumeToDefault
 import sendAnnouncementMessage
 import startTimer
 import java.awt.Desktop
@@ -224,11 +225,13 @@ fun App(discordClient: Kord) {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
-                                        ClipPlayerHandler.instance?.resetPlaylistFile()
+                                        backgroundCoroutineScope.launch {
+                                            resetSpotifyVolumeToDefault()
+                                        }
                                     }
                                 ) {
                                     Text(
-                                        text = "Reset Playlist"
+                                        text = "Reset Spotify Volume"
                                     )
                                 }
                             }
