@@ -15,4 +15,8 @@ object SpotifyConfig {
     val spotifyClientId: String = properties.getProperty("spotify_client_id")
     val maximumLengthSongRequest: Duration = properties.getProperty("maximum_length_song_request").toInt().minutes
     val waitingTimeVoteSkip: Duration = properties.getProperty("waiting_time_vote_skip").toInt().seconds
+    val cooldownAfterVoting: Duration = properties.getProperty("cooldown_after_voting").toInt().seconds
+    val waitingTimeSongLouder: Duration = properties.getProperty("waiting_time_song_louder").toInt().seconds
+    val songLouderIncreasedVolume = properties.getProperty("song_louder_increased_volume").toInt()
+    val defaultVolume = properties.getProperty("default_volume").toInt()
 }
