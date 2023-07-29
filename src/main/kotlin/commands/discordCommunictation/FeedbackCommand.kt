@@ -1,11 +1,11 @@
 package commands.discordCommunictation
 
-import handler.Command
 import DiscordBotConfig
 import DiscordMessageContent
 import config.TwitchBotConfig
-import logger
+import handler.Command
 import sendMessageToDiscordBot
+import sendMessageToTwitchChatAndLogIt
 import kotlin.time.Duration.Companion.seconds
 
 val feedbackCommand: Command = Command(
@@ -14,8 +14,8 @@ val feedbackCommand: Command = Command(
     handler = { arguments ->
         val message = arguments.joinToString(" ")
         if (message.trim().isEmpty()) {
-            chat.sendMessage(TwitchBotConfig.channel, "No input has been provided ${TwitchBotConfig.rejectEmote}")
-            addedUserCooldown = 5.seconds
+            sendMessageToTwitchChatAndLogIt(chat, "No input has been provided ${TwitchBotConfig.rejectEmote}")
+            addedUserCoolDown = 5.seconds
             return@Command
         }
 
@@ -27,10 +27,9 @@ val feedbackCommand: Command = Command(
         )
 
         val channel = sendMessageToDiscordBot(currentMessageContent)
-        val messageSentOnTwitchChat = chat.sendMessage(TwitchBotConfig.channel, "Message sent in #${channel.name} ${TwitchBotConfig.confirmEmote}")
-        logger.info("Message sent to Twitch Chat: $messageSentOnTwitchChat")
+        sendMessageToTwitchChatAndLogIt(chat, "Message sent in #${channel.name} ${TwitchBotConfig.confirmEmote}")
 
-        addedUserCooldown = TwitchBotConfig.defaultUserCooldown
-        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+        addedUserCoolDown = TwitchBotConfig.defaultUserCoolDown
+        addedCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
     }
 )

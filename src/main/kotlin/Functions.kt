@@ -1,5 +1,6 @@
 
 import com.adamratzman.spotify.models.Track
+import com.github.twitch4j.chat.TwitchChat
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
@@ -24,7 +25,6 @@ import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.autohead.*
 import io.ktor.server.plugins.partialcontent.*
 import io.ktor.server.routing.*
@@ -113,14 +113,11 @@ fun hostServer() {
                     return@webSocket
                 }
 
-                logger.info("Got new connection.")
+                logger.info("Got new connection for Clip player.")
 
                 try {
                     for (frame in incoming) {
-                        clipPlayerInstance.popNextRandomClip().let {
-                            send(it)
-                            logger.debug("Received video request from '${call.request.origin.remoteHost}', sending video '$it'.")
-                        }
+                        send(clipPlayerInstance.popNextRandomClip())
                     }
                 } finally {
                     logger.info("User disconnected.")
@@ -136,7 +133,6 @@ fun hostServer() {
 }
 
 // Discord functions
-
 suspend fun CommandHandlerScope.sendMessageToDiscordBot(discordMessageContent: DiscordMessageContent): TextChannel {
     val user = discordMessageContent.user
     val messageTitle = discordMessageContent.title
@@ -183,7 +179,7 @@ suspend fun sendAnnouncementMessage(messageForDiscord: String, discordClient: Ko
     channel.createMessage(
         "$messageForDiscord\n" +
                 DiscordBotConfig.announcementUsers.joinToString(" ") { "<@$it>" } +
-                "\nhttps://www.twitch.tv/alexshadowolex"
+                "\nhttps://www.twitch.tv/${TwitchBotConfig.channel}"
     )
 
     logger.info("Message created on Discord Channel $channelName")
@@ -402,7 +398,6 @@ fun checkAndUpdateSpreadSheets() {
     logger.info("Finished updating spread sheets")
 }
 
-
 // Timer
 private const val TIMER_FILE_NAME = "data\\displayFiles\\timer.txt"
 fun startTimer() {
@@ -446,4 +441,9 @@ fun setupLogging() {
     System.setOut(PrintStream(MultiOutputStream(System.out, FileOutputStream(logFile))))
 
     logger.info("Log file '${logFile.name}' has been created.")
+}
+
+fun sendMessageToTwitchChatAndLogIt(chat: TwitchChat, message: String) {
+    chat.sendMessage(TwitchBotConfig.channel, message)
+    logger.info("Sent Twitch chat message: $message")
 }

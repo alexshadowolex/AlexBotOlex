@@ -220,7 +220,7 @@ fun App(discordClient: Kord) {
                             Column (
                                 modifier = Modifier
                                     .weight(0.5f)
-                                    .padding(end = 1.dp)
+                                    .padding(end = 2.dp)
                             ) {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
@@ -238,7 +238,7 @@ fun App(discordClient: Kord) {
                             Column (
                                 modifier = Modifier
                                     .weight(0.5f)
-                                    .padding(start = 1.dp)
+                                    .padding(start = 2.dp)
                             ) {
                                 Button(
                                     onClick = {

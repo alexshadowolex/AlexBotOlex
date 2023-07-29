@@ -73,7 +73,6 @@ suspend fun main() = try {
     checkAndUpdateSpreadSheets()
 
     val discordClient = Kord(DiscordBotConfig.discordToken)
-
     logger.info("Discord client started.")
 
     CoroutineScope(discordClient.coroutineContext).launch {
@@ -109,16 +108,15 @@ suspend fun main() = try {
                     enableLogger = true
                 }.build()
             }
-
             logger.info("Spotify client built successfully.")
+
             startSpotifySongNameGetter()
 
             val twitchClient = setupTwitchBot(discordClient)
-
             onDispose {
-                twitchClient.chat.sendMessage(TwitchBotConfig.channel, "Bot shutting down peepoLeave")
+                sendMessageToTwitchChatAndLogIt(twitchClient.chat, "Bot shutting down peepoLeave")
                 soundAlertPlayerJob.cancel()
-                logger.info("App shutting down...")
+                logger.info("App shutting down")
             }
         }
 
@@ -144,7 +142,6 @@ suspend fun main() = try {
 }
 
 fun setupTwitchBot(discordClient: Kord): TwitchClient {
-
     val twitchClient = TwitchClientBuilder.builder()
         .withEnableHelix(true)
         .withEnableChat(true)
@@ -158,7 +155,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
     twitchClient.chat.run {
         connect()
         joinChannel(TwitchBotConfig.channel)
-        sendMessage(TwitchBotConfig.channel, "Bot running peepoArrive")
+        sendMessageToTwitchChatAndLogIt(this, "Bot running peepoArrive")
     }
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
@@ -168,10 +165,11 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
         }
 
         val parts = message.substringAfter(TwitchBotConfig.commandPrefix).split(" ")
-        // This feature has been built because of a_slowbro requesting too many screamy songs. The bot will not allow commands from blacklisted users
+
+        // This feature has been built because of SlowDivinity requesting too many screamy songs. The bot will not allow commands from blacklisted users
         if(messageEvent.user.name in TwitchBotConfig.blacklistedUsers || messageEvent.user.id in TwitchBotConfig.blacklistedUsers){
-            twitchClient.chat.sendMessage(
-                TwitchBotConfig.channel,
+            sendMessageToTwitchChatAndLogIt(
+                twitchClient.chat,
                 "Imagine not being a blacklisted user. Couldn't be you ${messageEvent.user.name} ${TwitchBotConfig.blacklistEmote}"
             )
             if(messageEvent.user.id !in TwitchBotConfig.blacklistedUsers) {
@@ -204,8 +202,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
         if((Clock.System.now() - nextAllowedCommandUsageInstant).isNegative() && messageEvent.user.name != TwitchBotConfig.channel) {
             val secondsUntilTimeoutOver = (nextAllowedCommandUsageInstant - Clock.System.now()).inWholeSeconds.seconds
 
-            twitchClient.chat.sendMessage(TwitchBotConfig.channel, "Command is still on cooldown. Please try again in $secondsUntilTimeoutOver")
-            logger.info("Unable to execute command due to ongoing command cooldown.")
+            sendMessageToTwitchChatAndLogIt(twitchClient.chat, "Command is still on cooldown. Please try again in $secondsUntilTimeoutOver")
 
             return@onEvent
         }
@@ -213,8 +210,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
         if ((Clock.System.now() - nextAllowedCommandUsageInstantForUser).isNegative() && messageEvent.user.name != TwitchBotConfig.channel) {
             val secondsUntilTimeoutOver = (nextAllowedCommandUsageInstantForUser - Clock.System.now()).inWholeSeconds.seconds
 
-            twitchClient.chat.sendMessage(TwitchBotConfig.channel, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver")
-            logger.info("Unable to execute command due to ongoing cooldown.")
+            sendMessageToTwitchChatAndLogIt(twitchClient.chat, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver")
 
             return@onEvent
         }
@@ -231,9 +227,9 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
             command.handler(commandHandlerScope, parts.drop(1))
 
             val key = command to messageEvent.user.name
-            nextAllowedCommandUsageInstantPerUser[key] = Clock.System.now() + commandHandlerScope.addedUserCooldown
+            nextAllowedCommandUsageInstantPerUser[key] = Clock.System.now() + commandHandlerScope.addedUserCoolDown
 
-            nextAllowedCommandUsageInstantPerCommand[command] = Clock.System.now() + commandHandlerScope.addedCommandCooldown
+            nextAllowedCommandUsageInstantPerCommand[command] = Clock.System.now() + commandHandlerScope.addedCommandCoolDown
         }
     }
 

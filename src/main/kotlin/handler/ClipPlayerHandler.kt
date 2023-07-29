@@ -3,7 +3,6 @@ package handler
 import ClipPlayerConfig
 import json
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import logger
 import java.io.File
@@ -74,7 +73,7 @@ class ClipPlayerHandler private constructor(
         }
     }
 
-    fun resetPlaylistFile() {
+    private fun resetPlaylistFile() {
         playedClips = setOf()
         logger.info("Resetting playlist...")
     }

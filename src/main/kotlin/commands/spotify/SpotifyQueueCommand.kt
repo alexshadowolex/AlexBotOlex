@@ -2,17 +2,18 @@ package commands.spotify
 
 import config.TwitchBotConfig
 import handler.Command
+import sendMessageToTwitchChatAndLogIt
 
 val spotifyQueueCommand: Command = Command(
     names = listOf("spotifyqueue", "sq"),
     description = "Displays the current spotify queue, which are the songs added via song requests.",
     handler = {
 
-        chat.sendMessage(
-            TwitchBotConfig.channel,
+        sendMessageToTwitchChatAndLogIt(
+            chat,
             "queue for this ${TwitchBotConfig.thisEmote}"
         )
 
-        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+        addedCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
     }
 )

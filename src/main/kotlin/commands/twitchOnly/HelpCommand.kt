@@ -4,6 +4,7 @@ import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
 import handler.Command
 import handler.commands
+import sendMessageToTwitchChatAndLogIt
 
 val helpCommand: Command = Command(
     names = listOf("help"),
@@ -20,11 +21,11 @@ val helpCommand: Command = Command(
                 """.trimIndent()
         }
 
-        chat.sendMessage(
-            TwitchBotConfig.channel,
+        sendMessageToTwitchChatAndLogIt(
+            chat,
             message
         )
 
-        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+        addedCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
     }
 )

@@ -1,5 +1,6 @@
 package commands.twitchOnly
 
+import backgroundCoroutineScope
 import com.github.twitch4j.chat.TwitchChat
 import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
@@ -7,6 +8,7 @@ import handler.Command
 import kotlinx.coroutines.*
 import logger
 import org.apache.commons.text.similarity.LevenshteinDistance
+import sendMessageToTwitchChatAndLogIt
 import ui.isSoundAlertEnabled
 import java.io.File
 import kotlin.math.abs
@@ -19,8 +21,7 @@ val soundAlertCommand: Command = Command(
     description = "Activate a sound alert. Following sound alerts exist: ${GoogleSpreadSheetConfig.soundAlertSpreadSheetLink}",
     handler = {arguments ->
         if(!isSoundAlertEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            logger.info("Sound Alerts are disabled, aborting command execution.")
-            chat.sendMessage(TwitchBotConfig.channel, "Sound Alerts are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            sendMessageToTwitchChatAndLogIt(chat, "Sound Alerts are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command
         }
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)
@@ -32,8 +33,9 @@ val soundAlertCommand: Command = Command(
 
         val query = arguments.joinToString(" ").lowercase()
 
-        var tmpUserCooldown = TwitchBotConfig.defaultUserCooldown
-        var tmpCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+        var tmpUserCoolDown = TwitchBotConfig.defaultUserCoolDown
+        var tmpCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
+
         val soundAlertFile = if (query.isEmpty()) {
             soundAlertDirectory.listFiles()!!
                 .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
@@ -52,19 +54,17 @@ val soundAlertCommand: Command = Command(
 
             handleBustinSoundAlert(soundAlertFile, chat)
         } else {
-            chat.sendMessage(TwitchBotConfig.channel, "Mad bro? Couldn't find a fitting sound alert.")
-            tmpUserCooldown = 5.seconds
-            tmpCommandCooldown = 5.seconds
+            sendMessageToTwitchChatAndLogIt(chat, "Mad bro? Couldn't find a fitting sound alert.")
+            tmpUserCoolDown = 5.seconds
+            tmpCommandCoolDown = 5.seconds
         }
-        addedUserCooldown = tmpUserCooldown
-        addedCommandCooldown = tmpCommandCooldown
+        addedUserCoolDown = tmpUserCoolDown
+        addedCommandCoolDown = tmpCommandCoolDown
     }
 )
 
-private val soundAlertPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
-
 @Suppress("unused")
-val soundAlertPlayerJob = soundAlertPlayerCoroutineScope.launch {
+val soundAlertPlayerJob = backgroundCoroutineScope.launch {
     while (isActive) {
         val entry = soundAlertQueue.removeFirstOrNull()
 
@@ -100,6 +100,7 @@ private suspend fun handleBustinSoundAlert(soundAlertFile: File, chat: TwitchCha
     }
 
     if(soundAlertFile == bustinSoundAlertFile) {
+        logger.info("Sound alert bustin was played, issuing bustin!")
         val bustinEmote = "Bustin "
         delay(1.5.seconds)
 

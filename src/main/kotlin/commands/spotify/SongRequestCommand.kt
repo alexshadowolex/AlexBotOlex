@@ -8,6 +8,7 @@ import config.TwitchBotConfig
 import handler.Command
 import io.ktor.http.*
 import logger
+import sendMessageToTwitchChatAndLogIt
 import spotifyClient
 import ui.isSongRequestEnabled
 import kotlin.time.Duration.Companion.milliseconds
@@ -18,23 +19,21 @@ val songRequestCommand = Command(
     description = "Add a spotify song to the current queue. Either provide a name or a link. The links have to be spotify song links \"open.spotify.com/tracks\"",
     handler = { arguments ->
         if(!isSongRequestEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            logger.info("Song Requests are disabled, aborting command execution.")
-            chat.sendMessage(TwitchBotConfig.channel, "Song Requests are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            sendMessageToTwitchChatAndLogIt(chat, "Song Requests are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command
         }
         if (arguments.isEmpty()) {
-            chat.sendMessage(TwitchBotConfig.channel, "No song given.")
-            logger.warn("No arguments given")
+            sendMessageToTwitchChatAndLogIt(chat, "No song given.")
             return@Command
         }
 
         val query = arguments.joinToString(" ")
 
         try {
-            chat.sendMessage(
-                TwitchBotConfig.channel,
+            sendMessageToTwitchChatAndLogIt(
+                chat,
                 updateQueue(query)?.let { track ->
-                    addedUserCooldown = 30.seconds
+                    addedUserCoolDown = 30.seconds
                     "Song '${track.name}' by ${
                         track.artists.map { "'${it.name}'" }.let { artists ->
                             listOf(
@@ -48,9 +47,9 @@ val songRequestCommand = Command(
                 }
             )
 
-            addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+            addedCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
         } catch (e: Exception) {
-            logger.error("Something went wrong with songrequests", e)
+            logger.error("Something went wrong with song request", e)
         }
     }
 )

@@ -1,5 +1,6 @@
 package commands.twitchOnly
 
+import backgroundCoroutineScope
 import config.TwitchBotConfig
 import handler.Command
 import httpClient
@@ -14,6 +15,7 @@ import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
+import sendMessageToTwitchChatAndLogIt
 import ui.isTtsEnabled
 import java.io.File
 import kotlin.time.Duration
@@ -47,14 +49,12 @@ val textToSpeechCommand = Command(
     description = "Play TTS message. The given message has to be written behind the command.",
     handler = { arguments ->
         if(!isTtsEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            logger.info("TTS is disabled, aborting command execution.")
-            chat.sendMessage(TwitchBotConfig.channel, "TTS is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            sendMessageToTwitchChatAndLogIt(chat, "TTS is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command
         }
 
         if (arguments.isEmpty()) {
-            chat.sendMessage(TwitchBotConfig.channel, "No input provided.")
-            logger.info("No TTS input provided.")
+            sendMessageToTwitchChatAndLogIt(chat, "No input provided.")
             return@Command
         }
 
@@ -84,35 +84,45 @@ val textToSpeechCommand = Command(
                     inputReader().readText().trim().toDouble().seconds
                 }
 
-                addedUserCooldown = (ttsSpeechDuration * 20).coerceAtLeast(1.minutes)
-                addedCommandCooldown = ttsSpeechDuration
-                chat.sendMessage(
-                    TwitchBotConfig.channel,
+                addedUserCoolDown = (ttsSpeechDuration * 20).coerceAtLeast(1.minutes)
+                addedCommandCoolDown = ttsSpeechDuration
+                sendMessageToTwitchChatAndLogIt(
+                    chat,
                     if (messageEvent.user.name == TwitchBotConfig.channel) {
                         "Playing TTS..."
                     } else {
-                        "Playing TTS, putting user '${messageEvent.user.name}' on ${addedUserCooldown.toString(DurationUnit.SECONDS, 0)} cooldown."
+                        "Playing TTS, putting user '${messageEvent.user.name}' on ${addedUserCoolDown.toString(DurationUnit.SECONDS, 0)} cooldown."
                     }
                 )
 
                 ttsQueue.add(TtsQueueEntry(ttsDataFile, ttsSpeechDuration))
             }
         } catch (e: Exception) {
-            chat.sendMessage(TwitchBotConfig.channel, "Unable to play TTS.")
+            sendMessageToTwitchChatAndLogIt(chat, "Unable to play TTS.")
             logger.error("Unable to play TTS:", e)
         }
     }
 )
 
-private val ttsPlayerCoroutineScope = CoroutineScope(Dispatchers.IO)
-
 @Suppress("unused")
-val ttsPlayerJob = ttsPlayerCoroutineScope.launch {
+val ttsPlayerJob = backgroundCoroutineScope.launch {
     while (isActive) {
         ttsQueue.removeFirstOrNull()?.let { entry ->
-            ProcessBuilder("ffplay", "-af", "volume=1", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
-                inheritIO()
-            }.start().onExit().await()
+            val ttsProcess = withContext(Dispatchers.IO) {
+                ProcessBuilder("ffplay", "-af", "volume=1", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
+                    inheritIO()
+                }.start().onExit().await()
+            }
+
+            while (ttsProcess!!.isAlive) {
+                supervisorScope {
+                    try {
+                        delay(0.1.seconds)
+                    } catch (_: Exception) {
+                        ttsProcess.destroyForcibly()
+                    }
+                }
+            }
 
             delay(3.seconds)
         } ?: run {

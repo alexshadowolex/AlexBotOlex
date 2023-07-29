@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import logger
+import sendMessageToTwitchChatAndLogIt
 import spotifyClient
 import kotlin.time.Duration.Companion.seconds
 
@@ -34,16 +35,14 @@ val voteSkipCommand: Command = Command(
     description = "Voting on skipping the current song. 2 options: \"${VOTE_OPTIONS.YES}\" or \"${VOTE_OPTIONS.NO}\". After ${SpotifyConfig.waitingTimeVoteSkip} it will evaluate the votes. You need at least $MINIMUM_AMOUNT_VOTES votes and at least $FACTOR_MORE_YES_THAN_NO times more of the yes votes than no votes.",
     handler = {arguments ->
         if(arguments.isEmpty()) {
-            logger.info("Arguments were empty")
-            chat.sendMessage(TwitchBotConfig.channel, "No vote given ${TwitchBotConfig.shrugEmote}")
+            sendMessageToTwitchChatAndLogIt(chat, "No vote given ${TwitchBotConfig.shrugEmote}")
             return@Command
         }
         val vote = arguments.first().lowercase()
 
         if(vote == VOTE_OPTIONS.YES || vote == VOTE_OPTIONS.NO) {
             if(Clock.System.now() < nextVoteTimeStart) {
-                logger.info("Voting is still on cool down")
-                chat.sendMessage(TwitchBotConfig.channel, "Voting for skipping this song is possible in ${(nextVoteTimeStart - Clock.System.now()).inWholeSeconds.seconds}")
+                sendMessageToTwitchChatAndLogIt(chat, "Voting for skipping this song is possible in ${(nextVoteTimeStart - Clock.System.now()).inWholeSeconds.seconds}")
                 return@Command
             }
 
@@ -56,14 +55,13 @@ val voteSkipCommand: Command = Command(
                 logger.info("Started voting for skip. Variables - currentSong.name: ${currentSong?.name} | voteTimeEnd: $voteTimeEnd")
                 startVoteController(chat)
 
-                chat.sendMessage(TwitchBotConfig.channel, "Voting for skip started and will end in ${SpotifyConfig.waitingTimeVoteSkip}. Type \"${TwitchBotConfig.commandPrefix}vs ${VOTE_OPTIONS.YES}\" or \"${TwitchBotConfig.commandPrefix}vs ${VOTE_OPTIONS.NO}\" to vote")
+                sendMessageToTwitchChatAndLogIt(chat, "Voting for skip started and will end in ${SpotifyConfig.waitingTimeVoteSkip}. Type \"${TwitchBotConfig.commandPrefix}vs ${VOTE_OPTIONS.YES}\" or \"${TwitchBotConfig.commandPrefix}vs ${VOTE_OPTIONS.NO}\" to vote")
             }
 
             currentVotesPerUser[messageEvent.user] = vote
             logger.info("Updated currentVotesPerUser, new values: ${currentVotesPerUser.map { it.key.name + ": " + it.value }}")
         } else {
-            logger.info("Input $vote was not valid")
-            chat.sendMessage(TwitchBotConfig.channel, "Invalid input for voting option!")
+            sendMessageToTwitchChatAndLogIt(chat, "Invalid input for voting option!")
         }
     }
 )
@@ -72,8 +70,7 @@ private suspend fun startVoteController(chat: TwitchChat) {
     backgroundCoroutineScope.launch {
         while (Clock.System.now() < voteTimeEnd!!) {
             if(getCurrentSpotifySong() != currentSong) {
-                logger.info("Song changed before vote time was over, aborted.")
-                chat.sendMessage(TwitchBotConfig.channel, "Song ended, voting aborted")
+                sendMessageToTwitchChatAndLogIt(chat, "Song ended, voting aborted")
                 resetVotingVariables()
                 return@launch
             }
@@ -85,7 +82,6 @@ private suspend fun startVoteController(chat: TwitchChat) {
         val message = if(amountYes + amountNo >= MINIMUM_AMOUNT_VOTES) {
             if(amountYes >= amountNo * 1.5) {
                 try {
-                    logger.info("Skipping song")
                     spotifyClient.player.skipForward()
                     "Skipping song ${currentSong?.name}"
                 } catch (e: Exception) {
@@ -100,7 +96,7 @@ private suspend fun startVoteController(chat: TwitchChat) {
             logger.info("Only had ${amountYes + amountNo} total votes for skipping, not $MINIMUM_AMOUNT_VOTES")
             "Not enough total votes for skipping, need at least $MINIMUM_AMOUNT_VOTES votes. Can't do nothing ${TwitchBotConfig.shrugEmote}"
         }
-        chat.sendMessage(TwitchBotConfig.channel, message)
+        sendMessageToTwitchChatAndLogIt(chat, message)
         resetVotingVariables()
     }
 }
@@ -109,5 +105,5 @@ private fun resetVotingVariables() {
     voteTimeEnd = null
     currentSong = null
     currentVotesPerUser = mutableMapOf()
-    nextVoteTimeStart = Clock.System.now() + SpotifyConfig.cooldownAfterVoting
+    nextVoteTimeStart = Clock.System.now() + SpotifyConfig.coolDownAfterVoting
 }

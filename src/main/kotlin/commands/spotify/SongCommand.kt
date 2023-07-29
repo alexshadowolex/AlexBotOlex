@@ -1,9 +1,10 @@
 package commands.spotify
 
-import handler.Command
 import config.TwitchBotConfig
 import createSongString
 import getCurrentSpotifySong
+import handler.Command
+import sendMessageToTwitchChatAndLogIt
 
 val songCommand: Command = Command(
     names = listOf("song", "s"),
@@ -15,11 +16,12 @@ val songCommand: Command = Command(
         } else {
             createSongString(currentSong) + " --> ${currentSong.externalUrls.spotify}"
         }
-        chat.sendMessage(
-            TwitchBotConfig.channel,
+
+        sendMessageToTwitchChatAndLogIt(
+            chat,
             message
         )
 
-        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+        addedCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
     }
 )

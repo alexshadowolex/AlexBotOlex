@@ -1,12 +1,12 @@
 package commands.discordCommunictation
 
-import handler.Command
 import DiscordBotConfig
 import DiscordMessageContent
 import config.TwitchBotConfig
 import config.TwitchBotConfig.explanationEmote
-import logger
+import handler.Command
 import sendMessageToDiscordBot
+import sendMessageToTwitchChatAndLogIt
 import kotlin.time.Duration.Companion.seconds
 
 val sendClipCommand: Command = Command(
@@ -18,15 +18,15 @@ val sendClipCommand: Command = Command(
                 argument.substringAfter("://").startsWith(it)
             }
         } ?: run {
-            chat.sendMessage(
-                TwitchBotConfig.channel,
+            sendMessageToTwitchChatAndLogIt(
+                chat,
                 "No link has been provided ${TwitchBotConfig.rejectEmote} " +
                 "Following link types are allowed: " +
                 TwitchBotConfig.allowedDomains.map { "'${it}'" }.let { links ->
                     listOf(links.dropLast(1).joinToString(), links.last()).filter { it.isNotBlank() }.joinToString(" and ")
                 } + ". Make sure, that your link starts with \"https://\" $explanationEmote"
             )
-            addedUserCooldown = 5.seconds
+            addedUserCoolDown = 5.seconds
             return@Command
         }
 
@@ -40,10 +40,9 @@ val sendClipCommand: Command = Command(
         )
 
         val channel = sendMessageToDiscordBot(currentMessageContent)
-        val messageSentOnTwitchChat = chat.sendMessage(TwitchBotConfig.channel, "Message sent in #${channel.name} ${TwitchBotConfig.confirmEmote}")
-        logger.info("Message sent to Twitch Chat: $messageSentOnTwitchChat")
+        sendMessageToTwitchChatAndLogIt(chat, "Message sent in #${channel.name} ${TwitchBotConfig.confirmEmote}")
 
-        addedUserCooldown = TwitchBotConfig.defaultUserCooldown
-        addedCommandCooldown = TwitchBotConfig.defaultCommandCooldown
+        addedUserCoolDown = TwitchBotConfig.defaultUserCoolDown
+        addedCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
     }
 )
