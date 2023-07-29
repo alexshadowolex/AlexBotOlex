@@ -32,18 +32,21 @@ val songRequestCommand = Command(
         try {
             sendMessageToTwitchChatAndLogIt(
                 chat,
-                updateQueue(query)?.let { track ->
-                    addedUserCoolDown = 30.seconds
-                    "Song '${track.name}' by ${
-                        track.artists.map { "'${it.name}'" }.let { artists ->
-                            listOf(
-                                artists.dropLast(1).joinToString(),
-                                artists.last()
-                            ).filter { it.isNotBlank() }.joinToString(" and ")
-                        }
-                    } has been added to the queue ${TwitchBotConfig.songRequestEmotes.random()}"
-                } ?: run {
-                    "Couldn't add song to the queue. Either the song was longer than ${SpotifyConfig.maximumLengthSongRequest}, your query returned no result or something went wrong."
+                updateQueue(query).let { response ->
+                    val track = response.track
+                    if(track != null) {
+                        addedUserCoolDown = 30.seconds
+                        "Song '${track.name}' by ${
+                            track.artists.map { "'${it.name}'" }.let { artists ->
+                                listOf(
+                                    artists.dropLast(1).joinToString(),
+                                    artists.last()
+                                ).filter { it.isNotBlank() }.joinToString(" and ")
+                            }
+                        } has been added to the queue ${TwitchBotConfig.songRequestEmotes.random()}"
+                    } else {
+                        "Couldn't add song to the queue. ${response.songRequestResultExplanation}"
+                    }
                 }
             )
 
@@ -54,7 +57,7 @@ val songRequestCommand = Command(
     }
 )
 
-suspend fun updateQueue(query: String): Track? {
+private suspend fun updateQueue(query: String): SongRequestResult {
     logger.info("called updateQueue.")
 
     val result = try {
@@ -75,16 +78,25 @@ suspend fun updateQueue(query: String): Track? {
                 ),
                 market = Market.DE
             ).tracks?.firstOrNull()
-        } ?: return null
+        } ?: return SongRequestResult(
+            track = null,
+            songRequestResultExplanation = "No Result when searching for song."
+        )
     } catch (e: Exception) {
         logger.error("Error while searching for track:", e)
-        return null
+        return SongRequestResult(
+            track = null,
+            songRequestResultExplanation = "Exception when accessing spotify endpoints for searching the song."
+        )
     }
 
     logger.info("Result after search: $result")
     if(result.length.milliseconds > SpotifyConfig.maximumLengthSongRequest) {
         logger.info("Song length ${result.length / 60000f} was longer than ${SpotifyConfig.maximumLengthSongRequest}")
-        return null
+        return SongRequestResult(
+            track = null,
+            songRequestResultExplanation = "The song was longer than ${SpotifyConfig.maximumLengthSongRequest}."
+        )
     }
 
     try {
@@ -92,8 +104,19 @@ suspend fun updateQueue(query: String): Track? {
         logger.info("Result URI: ${result.uri.uri}")
     } catch (e: Exception) {
         logger.error("Spotify is probably not set up.", e)
-        return null
+        return SongRequestResult(
+            track = null,
+            songRequestResultExplanation = "Adding the song to the playlist failed."
+        )
     }
 
-    return result
+    return SongRequestResult(
+        track = result,
+        songRequestResultExplanation = "Successfully added the song to the playlist."
+    )
 }
+
+private data class SongRequestResult(
+    val track: Track?,
+    val songRequestResultExplanation: String
+)
