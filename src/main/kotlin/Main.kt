@@ -15,6 +15,7 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.common.enums.CommandPermission
 import commands.twitchOnly.soundAlertPlayerJob
+import commands.twitchOnly.ttsPlayerJob
 import config.SpotifyConfig
 import config.TwitchBotConfig
 import dev.kord.core.Kord
@@ -116,6 +117,7 @@ suspend fun main() = try {
             onDispose {
                 sendMessageToTwitchChatAndLogIt(twitchClient.chat, "Bot shutting down peepoLeave")
                 soundAlertPlayerJob.cancel()
+                ttsPlayerJob.cancel()
                 logger.info("App shutting down")
             }
         }
