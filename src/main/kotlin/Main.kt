@@ -39,7 +39,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import ui.App
+import ui.app
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -123,13 +123,13 @@ suspend fun main() = try {
         }
 
         Window(
-            state = WindowState(size = DpSize(700.dp, 370.dp)),
+            state = WindowState(size = DpSize(700.dp, 600.dp)),
             title = "AlexBotOlex",
             onCloseRequest = ::exitApplication,
             icon = painterResource("icon.ico"),
             resizable = false
         ) {
-            App(discordClient)
+            app(discordClient)
         }
     }
 } catch (e: Throwable) {

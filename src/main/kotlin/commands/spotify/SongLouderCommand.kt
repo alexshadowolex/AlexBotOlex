@@ -16,6 +16,7 @@ import logger
 import resetSpotifyVolumeToDefault
 import sendMessageToTwitchChatAndLogIt
 import setSpotifyVolume
+import ui.isSongLouderEnabled
 import kotlin.time.Duration.Companion.seconds
 
 private val VOTE_OPTIONS = object {
@@ -35,6 +36,11 @@ val songLouderCommand: Command = Command(
     names = listOf("songlouder", "sl"),
     description = "Voting on making the current song louder. 2 options: \"${VOTE_OPTIONS.YES}\" or \"${VOTE_OPTIONS.NO}\". After ${SpotifyConfig.waitingTimeSongLouder} it will evaluate the votes. You need at least 3 votes and at least $FACTOR_MORE_YES_THAN_NO times more of the yes votes than no votes.",
     handler = {arguments ->
+        if(!isSongLouderEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
+            sendMessageToTwitchChatAndLogIt(chat, "Song louder is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            return@Command
+        }
+
         if(arguments.isEmpty()) {
             sendMessageToTwitchChatAndLogIt(chat, "No vote given ${TwitchBotConfig.shrugEmote}")
             return@Command

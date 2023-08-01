@@ -7,12 +7,18 @@ import config.TwitchBotConfig.explanationEmote
 import handler.Command
 import sendMessageToDiscordBot
 import sendMessageToTwitchChatAndLogIt
+import ui.isSendClipEnabled
 import kotlin.time.Duration.Companion.seconds
 
 val sendClipCommand: Command = Command(
     names = listOf("sc", "sendclip", "clip", "clips"),
     description = "Automatically posts the given link of a clip in the clip channel on Discord. Anything aside from the link will be dropped.",
     handler = { arguments ->
+        if(!isSendClipEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
+            sendMessageToTwitchChatAndLogIt(chat, "Send Clip is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            return@Command
+        }
+
         var link = arguments.filter { it.contains("https:") }.findLast { argument ->
             TwitchBotConfig.allowedDomains.any {
                 argument.substringAfter("://").startsWith(it)

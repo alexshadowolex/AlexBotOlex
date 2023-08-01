@@ -40,14 +40,28 @@ val darkColorPalette = darkColors(
 var isSongRequestEnabled = TwitchBotConfig.isSongRequestEnabledByDefault
 var isSoundAlertEnabled = TwitchBotConfig.isSoundAlertEnabledByDefault
 var isTtsEnabled = TwitchBotConfig.isTtsEnabledByDefault
+var isMemeQueueEnabled = TwitchBotConfig.isMemeQueueEnabledByDefault
+var isSongCommandEnabled = TwitchBotConfig.isSongCommandEnabledByDefault
+var isSongLouderEnabled = TwitchBotConfig.isSongLouderEnabledByDefault
+var isSpotifyQueueEnabled = TwitchBotConfig.isSpotifyQueueEnabledByDefault
+var isVoteSkipEnabled = TwitchBotConfig.isVoteSkipEnabledByDefault
+var isFeedbackEnabled = TwitchBotConfig.isFeedbackEnabledByDefault
+var isSendClipEnabled = TwitchBotConfig.isSendClipEnabledByDefault
 
 @Composable
 @Preview
-fun App(discordClient: Kord) {
+fun app(discordClient: Kord) {
     var messageForDiscord by remember { mutableStateOf("") }
     val isSongRequestChecked = remember { mutableStateOf(TwitchBotConfig.isSongRequestEnabledByDefault) }
     val isSoundAlertChecked = remember { mutableStateOf(TwitchBotConfig.isSoundAlertEnabledByDefault) }
     val isTtsChecked = remember { mutableStateOf(TwitchBotConfig.isTtsEnabledByDefault) }
+    val isMemeQueueChecked = remember { mutableStateOf(TwitchBotConfig.isMemeQueueEnabledByDefault) }
+    val isSongCommandChecked = remember { mutableStateOf(TwitchBotConfig.isSongCommandEnabledByDefault) }
+    val isSongLouderChecked = remember { mutableStateOf(TwitchBotConfig.isSongLouderEnabledByDefault) }
+    val isSpotifyQueueChecked = remember { mutableStateOf(TwitchBotConfig.isSpotifyQueueEnabledByDefault) }
+    val isVoteSkipChecked = remember { mutableStateOf(TwitchBotConfig.isVoteSkipEnabledByDefault) }
+    val isFeedbackChecked = remember { mutableStateOf(TwitchBotConfig.isFeedbackEnabledByDefault) }
+    val isSendClipChecked = remember { mutableStateOf(TwitchBotConfig.isSendClipEnabledByDefault) }
 
     MaterialTheme(colors = darkColorPalette) {
         Scaffold {
@@ -151,7 +165,7 @@ fun App(discordClient: Kord) {
                         ) {
                             Column (
                                 modifier = Modifier
-                                    .weight(0.3f)
+                                    .weight(0.25f)
                                     .padding(end = 1.dp)
                             ) {
                                 Text(
@@ -172,7 +186,7 @@ fun App(discordClient: Kord) {
 
                             Column (
                                 modifier = Modifier
-                                    .weight(0.3f)
+                                    .weight(0.25f)
                                     .padding(end = 1.dp)
                             ) {
                                 Text(
@@ -193,7 +207,7 @@ fun App(discordClient: Kord) {
 
                             Column (
                                 modifier = Modifier
-                                    .weight(0.3f)
+                                    .weight(0.25f)
                                     .padding(end = 1.dp)
                             ) {
                                 Text(
@@ -206,6 +220,164 @@ fun App(discordClient: Kord) {
                                     onCheckedChange = {
                                         isTtsChecked.value = it
                                         isTtsEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(start = 0.dp)
+                            ) {
+                                Text(
+                                    text = "Song Comm Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isSongCommandChecked.value,
+                                    onCheckedChange = {
+                                        isSongCommandChecked.value = it
+                                        isSongRequestEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 20.dp)
+                        ) {
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Song Louder Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isSongLouderChecked.value,
+                                    onCheckedChange = {
+                                        isSongLouderChecked.value = it
+                                        isSongLouderEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Spotify Queue Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isSpotifyQueueChecked.value,
+                                    onCheckedChange = {
+                                        isSpotifyQueueChecked.value = it
+                                        isSpotifyQueueEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Vote Skip Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isVoteSkipChecked.value,
+                                    onCheckedChange = {
+                                        isVoteSkipChecked.value = it
+                                        isVoteSkipEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(start = 0.dp)
+                            ) {
+                                Text(
+                                    text = "Meme Queue Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isMemeQueueChecked.value,
+                                    onCheckedChange = {
+                                        isMemeQueueChecked.value = it
+                                        isMemeQueueEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+
+
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 20.dp)
+                        ) {
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Feedback Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isFeedbackChecked.value,
+                                    onCheckedChange = {
+                                        isFeedbackChecked.value = it
+                                        isFeedbackEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Send Clip Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isSendClipChecked.value,
+                                    onCheckedChange = {
+                                        isSendClipChecked.value = it
+                                        isSendClipEnabled = it
                                     },
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
