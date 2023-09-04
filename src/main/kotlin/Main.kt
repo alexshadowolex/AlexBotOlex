@@ -182,16 +182,6 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
         val command = commands.find { parts.first().substringAfter(TwitchBotConfig.commandPrefix).lowercase() in it.names } ?: return@onEvent
 
-        if (TwitchBotConfig.onlyMods && CommandPermission.MODERATOR !in messageEvent.permissions) {
-            twitchClient.chat.sendMessage(
-                TwitchBotConfig.channel,
-                "You do not have the required permissions to use this command."
-            )
-            logger.info("User '${messageEvent.user.name}' does not have the necessary permissions to call command '${command.names.first()}'")
-
-            return@onEvent
-        }
-
         logger.info("User '${messageEvent.user.name}' tried using command '${command.names.first()}' with arguments: ${parts.drop(1).joinToString()}")
 
         val nextAllowedCommandUsageInstant = nextAllowedCommandUsageInstantPerCommand.getOrPut(command) {

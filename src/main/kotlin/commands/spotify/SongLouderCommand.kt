@@ -35,7 +35,7 @@ private var currentSong: Track? = null
 val songLouderCommand: Command = Command(
     names = listOf("songlouder", "sl"),
     description = "Voting on making the current song louder. 2 options: \"${VOTE_OPTIONS.YES}\" or \"${VOTE_OPTIONS.NO}\". After ${SpotifyConfig.waitingTimeSongLouder} it will evaluate the votes. You need at least 3 votes and at least $FACTOR_MORE_YES_THAN_NO times more of the yes votes than no votes.",
-    handler = {arguments ->
+    handler = { arguments ->
         if(!isSongLouderEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
             sendMessageToTwitchChatAndLogIt(chat, "Song louder is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
             return@Command
@@ -91,7 +91,7 @@ private suspend fun startVoteController(chat: TwitchChat) {
                 try {
                     setSpotifyVolume(SpotifyConfig.songLouderIncreasedVolume)
                     startVolumeResetHandler(currentSong)
-                    "Making song ${currentSong?.name} louder ${TwitchBotConfig.peepoDjEmote}"
+                    "Making song ${currentSong?.name} louder ${TwitchBotConfig.songRequestEmotes.random()}"
                 } catch (e: Exception) {
                     logger.error("Making song louder failed, exception: ", e)
                     "Making the song louder failed, ty Spotify"

@@ -13,7 +13,6 @@ object TwitchBotConfig {
 
     val chatAccountToken = File("data\\tokens\\twitchToken.txt").readText()
     val channel: String = properties.getProperty("channel")
-    val onlyMods = properties.getProperty("only_mods") == "true"
     val commandPrefix: String = properties.getProperty("command_prefix")
     val songRequestEmotes: List<String> = properties.getProperty("song_request_emotes").split(",")
     val soundAlertDirectory: String = properties.getProperty("sound_alert_directory")
@@ -46,4 +45,6 @@ object TwitchBotConfig {
     val raidMessageAmountRepetitions = properties.getProperty("raid_message_amount_repetitions").toInt()
     val shrugEmote: String = properties.getProperty("shrug_emote")
     val peepoDjEmote: String = properties.getProperty("peepo_dj_emote")
+    val pepeVibeHardEmote: String = properties.getProperty("pepe_vibe_hard_emote")
+    val yikersEmote: String = properties.getProperty("yikers_emote")
 }
