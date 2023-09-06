@@ -3,6 +3,7 @@ package commands.twitchOnly
 import config.TwitchBotConfig
 import handler.Command
 import sendMessageToTwitchChatAndLogIt
+import kotlin.time.Duration.Companion.seconds
 
 var firstUser: String? = null
 
@@ -25,5 +26,7 @@ val firstCommand: Command = Command(
             chat,
             message
         )
+
+        addedCommandCoolDown = 5.seconds
     }
 )

@@ -67,6 +67,7 @@ val json = Json {
 }
 
 val backgroundCoroutineScope = CoroutineScope(Dispatchers.IO)
+val commandsInUsage = mutableSetOf<Command>()
 
 suspend fun main() = try {
     setupLogging()
@@ -184,6 +185,13 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
         logger.info("User '${messageEvent.user.name}' tried using command '${command.names.first()}' with arguments: ${parts.drop(1).joinToString()}")
 
+        if(commandsInUsage.contains(command)) {
+            logger.info("Command ${command.names.first()} is already in usage. Aborting handler for user ${messageEvent.user.name}")
+            return@onEvent
+        }
+
+        commandsInUsage.add(command)
+
         val nextAllowedCommandUsageInstant = nextAllowedCommandUsageInstantPerCommand.getOrPut(command) {
             Clock.System.now()
         }
@@ -196,6 +204,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
             sendMessageToTwitchChatAndLogIt(twitchClient.chat, "Command is still on cooldown. Please try again in $secondsUntilTimeoutOver")
 
+            commandsInUsage.remove(command)
             return@onEvent
         }
 
@@ -204,6 +213,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
             sendMessageToTwitchChatAndLogIt(twitchClient.chat, "You are still on cooldown. Please try again in $secondsUntilTimeoutOver")
 
+            commandsInUsage.remove(command)
             return@onEvent
         }
 
@@ -222,6 +232,8 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
             nextAllowedCommandUsageInstantPerUser[key] = Clock.System.now() + commandHandlerScope.addedUserCoolDown
 
             nextAllowedCommandUsageInstantPerCommand[command] = Clock.System.now() + commandHandlerScope.addedCommandCoolDown
+
+            commandsInUsage.remove(command)
         }
     }
 
