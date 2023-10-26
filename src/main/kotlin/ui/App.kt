@@ -47,6 +47,7 @@ var isSpotifyQueueEnabled = TwitchBotConfig.isSpotifyQueueEnabledByDefault
 var isVoteSkipEnabled = TwitchBotConfig.isVoteSkipEnabledByDefault
 var isFeedbackEnabled = TwitchBotConfig.isFeedbackEnabledByDefault
 var isSendClipEnabled = TwitchBotConfig.isSendClipEnabledByDefault
+var isFirstEnabled = TwitchBotConfig.isFirstEnabledByDefault
 
 @Composable
 @Preview
@@ -62,6 +63,7 @@ fun app(discordClient: Kord) {
     val isVoteSkipChecked = remember { mutableStateOf(TwitchBotConfig.isVoteSkipEnabledByDefault) }
     val isFeedbackChecked = remember { mutableStateOf(TwitchBotConfig.isFeedbackEnabledByDefault) }
     val isSendClipChecked = remember { mutableStateOf(TwitchBotConfig.isSendClipEnabledByDefault) }
+    val isFirstChecked = remember { mutableStateOf(TwitchBotConfig.isFirstEnabledByDefault) }
 
     MaterialTheme(colors = darkColorPalette) {
         Scaffold {
@@ -378,6 +380,27 @@ fun app(discordClient: Kord) {
                                     onCheckedChange = {
                                         isSendClipChecked.value = it
                                         isSendClipEnabled = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .weight(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "First Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isFirstChecked.value,
+                                    onCheckedChange = {
+                                        isFirstChecked.value = it
+                                        isFirstEnabled = it
                                     },
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)

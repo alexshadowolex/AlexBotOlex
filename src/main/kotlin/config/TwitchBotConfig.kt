@@ -37,6 +37,7 @@ object TwitchBotConfig {
     val isVoteSkipEnabledByDefault: Boolean = properties.getProperty("is_vote_skip_enabled_by_default").toBoolean()
     val isFeedbackEnabledByDefault: Boolean = properties.getProperty("is_feedback_enabled_by_default").toBoolean()
     val isSendClipEnabledByDefault: Boolean = properties.getProperty("is_send_clip_enabled_by_default").toBoolean()
+    val isFirstEnabledByDefault: Boolean = properties.getProperty("is_first_enabled_by_default").toBoolean()
     val commandDisabledEmote1: String = properties.getProperty("command_disabled_emote1")
     val commandDisabledEmote2: String = properties.getProperty("command_disabled_emote2")
     val thisEmote: String = properties.getProperty("this_emote")

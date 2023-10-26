@@ -32,7 +32,7 @@ dependencies {
 
     implementation("com.github.kwhat:jnativehook:2.2.2")
     implementation("com.github.twitch4j:twitch4j:1.14.0")
-    implementation("com.adamratzman:spotify-api-kotlin-core:4.0.1")
+    implementation("com.adamratzman:spotify-api-kotlin-core:4.0.2")
 
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
