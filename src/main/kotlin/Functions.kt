@@ -1,6 +1,8 @@
 
 import com.adamratzman.spotify.models.Track
+import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.chat.TwitchChat
+import com.github.twitch4j.chat.events.channel.RaidEvent
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
@@ -44,6 +46,30 @@ import java.nio.file.Paths
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
+
+// Twitch Functions
+fun handleRaidEvent(raidEvent: RaidEvent, twitchClient: TwitchClient) {
+    logger.info("Called handleRaidEvent")
+    val raiderId = raidEvent.raider.id
+    val raiderName = raidEvent.raider.name
+
+    logger.info("Raider name: $raiderName | Raider ID: $raiderId")
+
+    sendMessageToTwitchChatAndLogIt(raidEvent.twitchChat, "!so $raiderName")
+
+    try {
+        twitchClient.helix.sendShoutout(
+            TwitchBotConfig.chatAccountToken,
+            TwitchBotConfig.channelAccountId,
+            raiderId,
+            TwitchBotConfig.chatAccountId
+        )
+
+        logger.info("Issued Shoutout successfully")
+    } catch (e: Exception) {
+        logger.error("Something went wrong when sending the Shoutout", e)
+    }
+}
 
 // Spotify Functions
 suspend fun getCurrentSpotifySong(): Track? {

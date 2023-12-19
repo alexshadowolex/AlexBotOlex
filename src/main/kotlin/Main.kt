@@ -13,6 +13,7 @@ import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.twitch4j.TwitchClient
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
+import com.github.twitch4j.chat.events.channel.RaidEvent
 import com.github.twitch4j.common.enums.CommandPermission
 import commands.twitchOnly.soundAlertPlayerJob
 import commands.twitchOnly.ttsPlayerJob
@@ -102,7 +103,9 @@ suspend fun main() = try {
                     afterTokenRefresh = {
                         it.token.refreshToken = initialToken.refreshToken
                         try {
-                            File("data\\tokens\\spotifyToken.json").writeText(json.encodeToString(it.token.copy(refreshToken = initialToken.refreshToken)))
+                            File("data\\tokens\\spotifyToken.json").writeText(
+                                json.encodeToString(it.token.copy(refreshToken = initialToken.refreshToken))
+                            )
                         } catch(e: Exception) {
                             logger.error("Error occured while saving new token", e)
                         }
@@ -235,6 +238,11 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
             commandsInUsage.remove(command)
         }
+    }
+
+    twitchClient.eventManager.onEvent(RaidEvent::class.java) { raidEvent ->
+        logger.info("Raid event called")
+        handleRaidEvent(raidEvent, twitchClient)
     }
 
     logger.info("Twitch client started.")
