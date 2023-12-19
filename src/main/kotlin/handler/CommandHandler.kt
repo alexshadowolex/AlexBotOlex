@@ -20,6 +20,7 @@ data class CommandHandlerScope(
     val messageEvent: ChannelMessageEvent,
     val userIsPrivileged: Boolean,
     val memeQueueHandler: MemeQueueHandler,
+    val firstLeaderboardHandler: FirstLeaderboardHandler,
     var addedUserCoolDown: Duration = Duration.ZERO,
     var addedCommandCoolDown: Duration = Duration.ZERO
 )
@@ -38,5 +39,6 @@ val commands = listOf(
     raidMessageCommand,
     voteSkipCommand,
     songLouderCommand,
-    firstCommand
+    firstCommand,
+    firstLeaderboardCommand
 )

@@ -25,10 +25,7 @@ import config.TwitchBotConfig
 import dev.kord.core.Kord
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
-import handler.Command
-import handler.CommandHandlerScope
-import handler.MemeQueueHandler
-import handler.commands
+import handler.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -154,12 +151,14 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
         .withEnableHelix(true)
         .withEnableChat(true)
         .withDefaultAuthToken(OAuth2Credential("twitch", TwitchBotConfig.chatAccountToken))
+        .withChatAccount(OAuth2Credential("twitch", TwitchBotConfig.chatAccountToken))
         .build()
 
     val nextAllowedCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
     val nextAllowedCommandUsageInstantPerCommand = mutableMapOf<Command, Instant>()
 
     val memeQueueHandler = MemeQueueHandler()
+    val firstLeaderboardHandler = FirstLeaderboardHandler()
     twitchClient.chat.run {
         connect()
         joinChannel(TwitchBotConfig.channel)
@@ -229,6 +228,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
             chat = twitchClient.chat,
             messageEvent = messageEvent,
             memeQueueHandler = memeQueueHandler,
+            firstLeaderboardHandler = firstLeaderboardHandler,
             userIsPrivileged = CommandPermission.MODERATOR in messageEvent.permissions
         )
 

@@ -19,6 +19,7 @@ val firstCommand: Command = Command(
 
         val message = if(firstUser == null) {
             firstUser = messageEvent.user.name
+            firstLeaderboardHandler.addEntry(messageEvent.user.name)
             "${messageEvent.user.name} is the fastest and claimed first ${TwitchBotConfig.pepeVibeHardEmote}"
         } else {
             if(firstUser == messageEvent.user.name) {
