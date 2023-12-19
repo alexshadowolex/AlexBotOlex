@@ -2,6 +2,7 @@ package ui
 import ClipPlayerConfig
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -49,10 +50,13 @@ var isFeedbackEnabled = TwitchBotConfig.isFeedbackEnabledByDefault
 var isSendClipEnabled = TwitchBotConfig.isSendClipEnabledByDefault
 var isFirstEnabled = TwitchBotConfig.isFirstEnabledByDefault
 
+lateinit var switchInteractionSource: MutableInteractionSource
+
 @Composable
 @Preview
 fun app(discordClient: Kord) {
     var messageForDiscord by remember { mutableStateOf("") }
+    switchInteractionSource = remember { MutableInteractionSource() }
     val isSongRequestChecked = remember { mutableStateOf(TwitchBotConfig.isSongRequestEnabledByDefault) }
     val isSoundAlertChecked = remember { mutableStateOf(TwitchBotConfig.isSoundAlertEnabledByDefault) }
     val isTtsChecked = remember { mutableStateOf(TwitchBotConfig.isTtsEnabledByDefault) }
@@ -181,6 +185,7 @@ fun app(discordClient: Kord) {
                                         isSongRequestChecked.value = it
                                         isSongRequestEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -202,6 +207,7 @@ fun app(discordClient: Kord) {
                                         isSoundAlertChecked.value = it
                                         isSoundAlertEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -223,6 +229,7 @@ fun app(discordClient: Kord) {
                                         isTtsChecked.value = it
                                         isTtsEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -244,6 +251,7 @@ fun app(discordClient: Kord) {
                                         isSongCommandChecked.value = it
                                         isSongRequestEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -270,6 +278,7 @@ fun app(discordClient: Kord) {
                                         isSongLouderChecked.value = it
                                         isSongLouderEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -291,6 +300,7 @@ fun app(discordClient: Kord) {
                                         isSpotifyQueueChecked.value = it
                                         isSpotifyQueueEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -312,6 +322,7 @@ fun app(discordClient: Kord) {
                                         isVoteSkipChecked.value = it
                                         isVoteSkipEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -333,6 +344,7 @@ fun app(discordClient: Kord) {
                                         isMemeQueueChecked.value = it
                                         isMemeQueueEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -360,6 +372,7 @@ fun app(discordClient: Kord) {
                                         isFeedbackChecked.value = it
                                         isFeedbackEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -381,6 +394,7 @@ fun app(discordClient: Kord) {
                                         isSendClipChecked.value = it
                                         isSendClipEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -402,6 +416,7 @@ fun app(discordClient: Kord) {
                                         isFirstChecked.value = it
                                         isFirstEnabled = it
                                     },
+                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )

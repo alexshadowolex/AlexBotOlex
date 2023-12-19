@@ -1,5 +1,7 @@
 
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -15,6 +17,7 @@ import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent
 import com.github.twitch4j.chat.events.channel.RaidEvent
 import com.github.twitch4j.common.enums.CommandPermission
+import com.github.twitch4j.events.ChannelGoLiveEvent
 import commands.twitchOnly.soundAlertPlayerJob
 import commands.twitchOnly.ttsPlayerJob
 import config.SpotifyConfig
@@ -31,21 +34,20 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import ui.app
+import ui.switchInteractionSource
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
@@ -151,7 +153,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
     val twitchClient = TwitchClientBuilder.builder()
         .withEnableHelix(true)
         .withEnableChat(true)
-        .withChatAccount(OAuth2Credential("twitch", TwitchBotConfig.chatAccountToken))
+        .withDefaultAuthToken(OAuth2Credential("twitch", TwitchBotConfig.chatAccountToken))
         .build()
 
     val nextAllowedCommandUsageInstantPerUser = mutableMapOf<Pair<Command, /* user: */ String>, Instant>()
@@ -163,6 +165,8 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
         joinChannel(TwitchBotConfig.channel)
         sendMessageToTwitchChatAndLogIt(this, "Bot running peepoArrive")
     }
+
+    twitchClient.clientHelper.enableStreamEventListener(TwitchBotConfig.channel)
 
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
         val message = messageEvent.message
@@ -243,6 +247,20 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
     twitchClient.eventManager.onEvent(RaidEvent::class.java) { raidEvent ->
         logger.info("Raid event called")
         handleRaidEvent(raidEvent, twitchClient)
+    }
+
+    twitchClient.eventManager.onEvent(ChannelGoLiveEvent::class.java) {
+        logger.info("Channel went live on twitch")
+        backgroundCoroutineScope.launch {
+            try {
+                val press = PressInteraction.Press(Offset.Zero)
+                switchInteractionSource.emit(press)
+                delay(300.milliseconds)
+                switchInteractionSource.emit(PressInteraction.Release(press))
+            } catch (e: Exception) {
+                logger.error("An exception occurred while turning on all the commands per interaction source. ", e)
+            }
+        }
     }
 
     logger.info("Twitch client started.")
