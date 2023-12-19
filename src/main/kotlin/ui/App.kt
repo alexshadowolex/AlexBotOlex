@@ -49,6 +49,7 @@ var isVoteSkipEnabled = TwitchBotConfig.isVoteSkipEnabledByDefault
 var isFeedbackEnabled = TwitchBotConfig.isFeedbackEnabledByDefault
 var isSendClipEnabled = TwitchBotConfig.isSendClipEnabledByDefault
 var isFirstEnabled = TwitchBotConfig.isFirstEnabledByDefault
+var isFirstLeaderboardEnabled = TwitchBotConfig.isFirstLeaderboardEnabled
 
 lateinit var switchInteractionSource: MutableInteractionSource
 
@@ -68,6 +69,7 @@ fun app(discordClient: Kord) {
     val isFeedbackChecked = remember { mutableStateOf(TwitchBotConfig.isFeedbackEnabledByDefault) }
     val isSendClipChecked = remember { mutableStateOf(TwitchBotConfig.isSendClipEnabledByDefault) }
     val isFirstChecked = remember { mutableStateOf(TwitchBotConfig.isFirstEnabledByDefault) }
+    val isFirstLeaderboardChecked = remember { mutableStateOf(TwitchBotConfig.isFirstLeaderboardEnabled) }
 
     MaterialTheme(colors = darkColorPalette) {
         Scaffold {
@@ -415,6 +417,34 @@ fun app(discordClient: Kord) {
                                     onCheckedChange = {
                                         isFirstChecked.value = it
                                         isFirstEnabled = it
+                                    },
+                                    interactionSource = switchInteractionSource,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+
+
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 20.dp)
+                        ) {
+                            Column (
+                                modifier = Modifier
+                                    .fillMaxWidth(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "First LB Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = isFirstLeaderboardChecked.value,
+                                    onCheckedChange = {
+                                        isFirstLeaderboardChecked.value = it
+                                        isFirstLeaderboardEnabled = it
                                     },
                                     interactionSource = switchInteractionSource,
                                     modifier = Modifier

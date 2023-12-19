@@ -4,6 +4,7 @@ import config.TwitchBotConfig
 import handler.Command
 import pluralForm
 import sendMessageToTwitchChatAndLogIt
+import ui.isFirstLeaderboardEnabled
 
 val firstLeaderboardCommand: Command = Command(
     names = listOf("fl", "firstleaderboard"),
@@ -12,7 +13,16 @@ val firstLeaderboardCommand: Command = Command(
             "If an in the leaderboard existing username is given as argument, " +
             "the place of that user and their amount will be displayed instead.",
     handler = { arguments ->
-        val userNameToSearchFor = arguments.firstOrNull()
+        if(!isFirstLeaderboardEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
+            sendMessageToTwitchChatAndLogIt(chat, "First Leaderboard is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+            return@Command
+        }
+
+        val userNameToSearchFor = if (arguments.isNotEmpty()) {
+            arguments.firstOrNull { it.isNotEmpty() }
+        } else {
+            null
+        }
         val message = if (userNameToSearchFor != null) {
             val entry = firstLeaderboardHandler.getLeaderboardEntry(userNameToSearchFor)
             if (entry != null) {
@@ -27,12 +37,16 @@ val firstLeaderboardCommand: Command = Command(
                             ""
                         }
             } else {
-                "User name $userNameToSearchFor does not exist in leaderboard. Maybe be first for once ${TwitchBotConfig.shrugEmote}"
+                "User name $userNameToSearchFor does not exist in leaderboard. Maybe they should be first for once ${TwitchBotConfig.shrugEmote}"
             }
         } else {
             val top3Leaderboard = firstLeaderboardHandler.getTop3Leaderboard()
-            "Top 3 first leaderboard entries: " + top3Leaderboard.joinToString (separator = " ") { entry ->
-                "Place " + (top3Leaderboard.indexOf(entry) + 1) + ": " + entry.userName + ", amount: " + entry.amount + " | "
+            if(top3Leaderboard.isNotEmpty()) {
+                "Top 3 first leaderboard entries: " + top3Leaderboard.joinToString(separator = " ") { entry ->
+                    "Place " + (top3Leaderboard.indexOf(entry) + 1) + ": " + entry.userName + ", amount: " + entry.amount + " | "
+                }
+            } else {
+                "Yo no one ever claimed first, wtf?!"
             }
         }
 

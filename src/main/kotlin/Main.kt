@@ -126,7 +126,7 @@ suspend fun main() = try {
         }
 
         Window(
-            state = WindowState(size = DpSize(700.dp, 600.dp)),
+            state = WindowState(size = DpSize(700.dp, 700.dp)),
             title = "AlexBotOlex",
             onCloseRequest = ::exitApplication,
             icon = painterResource("icon.ico"),
