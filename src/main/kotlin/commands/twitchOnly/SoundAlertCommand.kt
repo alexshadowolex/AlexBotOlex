@@ -5,11 +5,13 @@ import com.github.twitch4j.chat.TwitchChat
 import config.GoogleSpreadSheetConfig
 import config.TwitchBotConfig
 import handler.Command
+import isCommandDisabled
 import kotlinx.coroutines.*
 import logger
 import org.apache.commons.text.similarity.LevenshteinDistance
+import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
-import ui.isSoundAlertEnabled
+import ui.SwitchStateVariables
 import java.io.File
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
@@ -20,8 +22,8 @@ val soundAlertCommand: Command = Command(
     names = listOf("soundalert", "sa"),
     description = "Activate a sound alert. Following sound alerts exist: ${GoogleSpreadSheetConfig.soundAlertSpreadSheetLink}",
     handler = {arguments ->
-        if(!isSoundAlertEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "Sound Alerts are disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isSoundAlertEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("Sound alert command", chat)
             return@Command
         }
         val soundAlertDirectory = File(TwitchBotConfig.soundAlertDirectory)

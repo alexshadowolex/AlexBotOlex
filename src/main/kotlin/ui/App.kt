@@ -2,7 +2,6 @@ package ui
 import ClipPlayerConfig
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -38,38 +37,38 @@ val darkColorPalette = darkColors(
     onBackground = Color.White,
 )
 
-var isSongRequestEnabled = TwitchBotConfig.isSongRequestEnabledByDefault
-var isSoundAlertEnabled = TwitchBotConfig.isSoundAlertEnabledByDefault
-var isTtsEnabled = TwitchBotConfig.isTtsEnabledByDefault
-var isMemeQueueEnabled = TwitchBotConfig.isMemeQueueEnabledByDefault
-var isSongCommandEnabled = TwitchBotConfig.isSongCommandEnabledByDefault
-var isSongLouderEnabled = TwitchBotConfig.isSongLouderEnabledByDefault
-var isSpotifyQueueEnabled = TwitchBotConfig.isSpotifyQueueEnabledByDefault
-var isVoteSkipEnabled = TwitchBotConfig.isVoteSkipEnabledByDefault
-var isFeedbackEnabled = TwitchBotConfig.isFeedbackEnabledByDefault
-var isSendClipEnabled = TwitchBotConfig.isSendClipEnabledByDefault
-var isFirstEnabled = TwitchBotConfig.isFirstEnabledByDefault
-var isFirstLeaderboardEnabled = TwitchBotConfig.isFirstLeaderboardEnabled
-
-lateinit var switchInteractionSource: MutableInteractionSource
+object SwitchStateVariables {
+    lateinit var isSongRequestEnabled: MutableState<Boolean>
+    lateinit var isSoundAlertEnabled: MutableState<Boolean>
+    lateinit var isTtsEnabled: MutableState<Boolean>
+    lateinit var isMemeQueueEnabled: MutableState<Boolean>
+    lateinit var isSongCommandEnabled: MutableState<Boolean>
+    lateinit var isSongLouderEnabled: MutableState<Boolean>
+    lateinit var isSpotifyQueueEnabled: MutableState<Boolean>
+    lateinit var isVoteSkipEnabled: MutableState<Boolean>
+    lateinit var isFeedbackEnabled: MutableState<Boolean>
+    lateinit var isSendClipEnabled: MutableState<Boolean>
+    lateinit var isFirstEnabled: MutableState<Boolean>
+    lateinit var isFirstLeaderboardEnabled: MutableState<Boolean>
+}
 
 @Composable
 @Preview
 fun app(discordClient: Kord) {
     var messageForDiscord by remember { mutableStateOf("") }
-    switchInteractionSource = remember { MutableInteractionSource() }
-    val isSongRequestChecked = remember { mutableStateOf(TwitchBotConfig.isSongRequestEnabledByDefault) }
-    val isSoundAlertChecked = remember { mutableStateOf(TwitchBotConfig.isSoundAlertEnabledByDefault) }
-    val isTtsChecked = remember { mutableStateOf(TwitchBotConfig.isTtsEnabledByDefault) }
-    val isMemeQueueChecked = remember { mutableStateOf(TwitchBotConfig.isMemeQueueEnabledByDefault) }
-    val isSongCommandChecked = remember { mutableStateOf(TwitchBotConfig.isSongCommandEnabledByDefault) }
-    val isSongLouderChecked = remember { mutableStateOf(TwitchBotConfig.isSongLouderEnabledByDefault) }
-    val isSpotifyQueueChecked = remember { mutableStateOf(TwitchBotConfig.isSpotifyQueueEnabledByDefault) }
-    val isVoteSkipChecked = remember { mutableStateOf(TwitchBotConfig.isVoteSkipEnabledByDefault) }
-    val isFeedbackChecked = remember { mutableStateOf(TwitchBotConfig.isFeedbackEnabledByDefault) }
-    val isSendClipChecked = remember { mutableStateOf(TwitchBotConfig.isSendClipEnabledByDefault) }
-    val isFirstChecked = remember { mutableStateOf(TwitchBotConfig.isFirstEnabledByDefault) }
-    val isFirstLeaderboardChecked = remember { mutableStateOf(TwitchBotConfig.isFirstLeaderboardEnabled) }
+
+    SwitchStateVariables.isSongRequestEnabled = remember { mutableStateOf(TwitchBotConfig.isSongRequestEnabledByDefault) }
+    SwitchStateVariables.isSoundAlertEnabled = remember { mutableStateOf(TwitchBotConfig.isSoundAlertEnabledByDefault) }
+    SwitchStateVariables.isTtsEnabled = remember { mutableStateOf(TwitchBotConfig.isTtsEnabledByDefault) }
+    SwitchStateVariables.isMemeQueueEnabled = remember { mutableStateOf(TwitchBotConfig.isMemeQueueEnabledByDefault) }
+    SwitchStateVariables.isSongCommandEnabled = remember { mutableStateOf(TwitchBotConfig.isSongCommandEnabledByDefault) }
+    SwitchStateVariables.isSongLouderEnabled = remember { mutableStateOf(TwitchBotConfig.isSongLouderEnabledByDefault) }
+    SwitchStateVariables.isSpotifyQueueEnabled = remember { mutableStateOf(TwitchBotConfig.isSpotifyQueueEnabledByDefault) }
+    SwitchStateVariables.isVoteSkipEnabled = remember { mutableStateOf(TwitchBotConfig.isVoteSkipEnabledByDefault) }
+    SwitchStateVariables.isFeedbackEnabled = remember { mutableStateOf(TwitchBotConfig.isFeedbackEnabledByDefault) }
+    SwitchStateVariables.isSendClipEnabled = remember { mutableStateOf(TwitchBotConfig.isSendClipEnabledByDefault) }
+    SwitchStateVariables.isFirstEnabled = remember { mutableStateOf(TwitchBotConfig.isFirstEnabledByDefault) }
+    SwitchStateVariables.isFirstLeaderboardEnabled = remember { mutableStateOf(TwitchBotConfig.isFirstLeaderboardEnabled) }
 
     MaterialTheme(colors = darkColorPalette) {
         Scaffold {
@@ -182,12 +181,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isSongRequestChecked.value,
+                                    checked = SwitchStateVariables.isSongRequestEnabled.value,
                                     onCheckedChange = {
-                                        isSongRequestChecked.value = it
-                                        isSongRequestEnabled = it
+                                        SwitchStateVariables.isSongRequestEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -204,12 +201,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isSoundAlertChecked.value,
+                                    checked = SwitchStateVariables.isSoundAlertEnabled.value,
                                     onCheckedChange = {
-                                        isSoundAlertChecked.value = it
-                                        isSoundAlertEnabled = it
+                                        SwitchStateVariables.isSoundAlertEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -226,12 +221,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isTtsChecked.value,
+                                    checked = SwitchStateVariables.isTtsEnabled.value,
                                     onCheckedChange = {
-                                        isTtsChecked.value = it
-                                        isTtsEnabled = it
+                                        SwitchStateVariables.isTtsEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -248,12 +241,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isSongCommandChecked.value,
+                                    checked = SwitchStateVariables.isSongCommandEnabled.value,
                                     onCheckedChange = {
-                                        isSongCommandChecked.value = it
-                                        isSongRequestEnabled = it
+                                        SwitchStateVariables.isSongCommandEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -275,12 +266,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isSongLouderChecked.value,
+                                    checked = SwitchStateVariables.isSongLouderEnabled.value,
                                     onCheckedChange = {
-                                        isSongLouderChecked.value = it
-                                        isSongLouderEnabled = it
+                                        SwitchStateVariables.isSongLouderEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -297,12 +286,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isSpotifyQueueChecked.value,
+                                    checked = SwitchStateVariables.isSpotifyQueueEnabled.value,
                                     onCheckedChange = {
-                                        isSpotifyQueueChecked.value = it
-                                        isSpotifyQueueEnabled = it
+                                        SwitchStateVariables.isSpotifyQueueEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -319,12 +306,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isVoteSkipChecked.value,
+                                    checked = SwitchStateVariables.isVoteSkipEnabled.value,
                                     onCheckedChange = {
-                                        isVoteSkipChecked.value = it
-                                        isVoteSkipEnabled = it
+                                        SwitchStateVariables.isVoteSkipEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -341,12 +326,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isMemeQueueChecked.value,
+                                    checked = SwitchStateVariables.isMemeQueueEnabled.value,
                                     onCheckedChange = {
-                                        isMemeQueueChecked.value = it
-                                        isMemeQueueEnabled = it
+                                        SwitchStateVariables.isMemeQueueEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -369,12 +352,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isFeedbackChecked.value,
+                                    checked = SwitchStateVariables.isFeedbackEnabled.value,
                                     onCheckedChange = {
-                                        isFeedbackChecked.value = it
-                                        isFeedbackEnabled = it
+                                        SwitchStateVariables.isFeedbackEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -391,12 +372,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isSendClipChecked.value,
+                                    checked = SwitchStateVariables.isSendClipEnabled.value,
                                     onCheckedChange = {
-                                        isSendClipChecked.value = it
-                                        isSendClipEnabled = it
+                                        SwitchStateVariables.isSendClipEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -413,12 +392,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isFirstChecked.value,
+                                    checked = SwitchStateVariables.isFirstEnabled.value,
                                     onCheckedChange = {
-                                        isFirstChecked.value = it
-                                        isFirstEnabled = it
+                                        SwitchStateVariables.isFirstEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )
@@ -441,12 +418,10 @@ fun app(discordClient: Kord) {
                                         .align(Alignment.CenterHorizontally)
                                 )
                                 Switch(
-                                    checked = isFirstLeaderboardChecked.value,
+                                    checked = SwitchStateVariables.isFirstLeaderboardEnabled.value,
                                     onCheckedChange = {
-                                        isFirstLeaderboardChecked.value = it
-                                        isFirstLeaderboardEnabled = it
+                                        SwitchStateVariables.isFirstLeaderboardEnabled.value = it
                                     },
-                                    interactionSource = switchInteractionSource,
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
                                 )

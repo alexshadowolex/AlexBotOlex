@@ -2,9 +2,11 @@ package commands.twitchOnly
 
 import config.TwitchBotConfig
 import handler.Command
+import isCommandDisabled
 import pluralForm
+import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
-import ui.isFirstLeaderboardEnabled
+import ui.SwitchStateVariables
 
 val firstLeaderboardCommand: Command = Command(
     names = listOf("fl", "firstleaderboard"),
@@ -13,8 +15,8 @@ val firstLeaderboardCommand: Command = Command(
             "If an in the leaderboard existing username is given as argument, " +
             "the place of that user and their amount will be displayed instead.",
     handler = { arguments ->
-        if(!isFirstLeaderboardEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "First Leaderboard is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isFirstLeaderboardEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("First leaderboard command", chat)
             return@Command
         }
 

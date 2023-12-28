@@ -4,15 +4,17 @@ import config.TwitchBotConfig
 import createSongString
 import getCurrentSpotifySong
 import handler.Command
+import isCommandDisabled
+import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
-import ui.isSongCommandEnabled
+import ui.SwitchStateVariables
 
 val songCommand: Command = Command(
     names = listOf("song", "s"),
     description = "Displays the current song name together with the spotify link.",
     handler = {
-        if(!isSongCommandEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "Song command is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isSongCommandEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("Song command", chat)
             return@Command
         }
 

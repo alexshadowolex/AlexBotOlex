@@ -4,17 +4,19 @@ import DiscordBotConfig
 import DiscordMessageContent
 import config.TwitchBotConfig
 import handler.Command
+import isCommandDisabled
+import sendCommandDisabledMessage
 import sendMessageToDiscordBot
 import sendMessageToTwitchChatAndLogIt
-import ui.isFeedbackEnabled
+import ui.SwitchStateVariables
 import kotlin.time.Duration.Companion.seconds
 
 val feedbackCommand: Command = Command(
     names = listOf("fb", "feedback"),
     description = "Automatically posts the given message in the feedback channel on Discord.",
     handler = { arguments ->
-        if(!isFeedbackEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "Feedback is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isFeedbackEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("Feedback command", chat)
             return@Command
         }
 

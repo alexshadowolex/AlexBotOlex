@@ -8,14 +8,16 @@ import config.SpotifyConfig
 import config.TwitchBotConfig
 import getCurrentSpotifySong
 import handler.Command
+import isCommandDisabled
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import logger
+import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
 import spotifyClient
-import ui.isVoteSkipEnabled
+import ui.SwitchStateVariables
 import kotlin.time.Duration.Companion.seconds
 
 private val VOTE_OPTIONS = object {
@@ -35,8 +37,8 @@ val voteSkipCommand: Command = Command(
     names = listOf("voteskip", "vs"),
     description = "Voting on skipping the current song. 2 options: \"${VOTE_OPTIONS.YES}\" or \"${VOTE_OPTIONS.NO}\". After ${SpotifyConfig.waitingTimeVoteSkip} it will evaluate the votes. You need at least $MINIMUM_AMOUNT_VOTES votes and at least $FACTOR_MORE_YES_THAN_NO times more of the yes votes than no votes.",
     handler = {arguments ->
-        if(!isVoteSkipEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "Vote Skip is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isVoteSkipEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("Vote skip command", chat)
             return@Command
         }
 

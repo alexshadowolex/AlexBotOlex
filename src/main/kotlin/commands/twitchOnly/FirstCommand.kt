@@ -2,8 +2,10 @@ package commands.twitchOnly
 
 import config.TwitchBotConfig
 import handler.Command
+import isCommandDisabled
+import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
-import ui.isFirstEnabled
+import ui.SwitchStateVariables
 import kotlin.time.Duration.Companion.seconds
 
 var firstUser: String? = null
@@ -12,8 +14,8 @@ val firstCommand: Command = Command(
     names = listOf("first"),
     description = "First user to use this command will be displayed for the rest of the bot's runtime as first.",
     handler = {
-        if(!isFirstEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "First is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isFirstEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("First command", chat)
             return@Command
         }
 

@@ -37,6 +37,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
 import org.apache.commons.lang.time.DurationFormatUtils
+import ui.SwitchStateVariables
 import ui.clipOverlayPage
 import java.io.File
 import java.io.FileOutputStream
@@ -69,6 +70,17 @@ fun handleRaidEvent(raidEvent: RaidEvent, twitchClient: TwitchClient) {
     } catch (e: Exception) {
         logger.error("Something went wrong when sending the Shoutout", e)
     }
+}
+
+fun isCommandDisabled(commandEnabled: Boolean, userName: String): Boolean {
+    return !commandEnabled && userName != TwitchBotConfig.channel
+}
+
+fun sendCommandDisabledMessage(messagePrefix: String, chat: TwitchChat) {
+    sendMessageToTwitchChatAndLogIt(
+        chat = chat,
+        message = "$messagePrefix is disabled ${TwitchBotConfig.commandDisabledEmote1} " +
+            "Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
 }
 
 // Spotify Functions
@@ -472,4 +484,21 @@ fun setupLogging() {
 fun sendMessageToTwitchChatAndLogIt(chat: TwitchChat, message: String) {
     chat.sendMessage(TwitchBotConfig.channel, message)
     logger.info("Sent Twitch chat message: $message")
+}
+
+
+// UI handling
+fun setAllUiSwitches(value: Boolean) {
+    SwitchStateVariables.isSongRequestEnabled.value = value
+    SwitchStateVariables.isSoundAlertEnabled.value = value
+    SwitchStateVariables.isTtsEnabled.value = value
+    SwitchStateVariables.isMemeQueueEnabled.value = value
+    SwitchStateVariables.isSongCommandEnabled.value = value
+    SwitchStateVariables.isSongLouderEnabled.value = value
+    SwitchStateVariables.isSpotifyQueueEnabled.value = value
+    SwitchStateVariables.isVoteSkipEnabled.value = value
+    SwitchStateVariables.isFeedbackEnabled.value = value
+    SwitchStateVariables.isSendClipEnabled.value = value
+    SwitchStateVariables.isFirstEnabled.value = value
+    SwitchStateVariables.isFirstLeaderboardEnabled.value = value
 }

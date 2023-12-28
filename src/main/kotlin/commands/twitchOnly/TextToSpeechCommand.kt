@@ -10,13 +10,15 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
+import isCommandDisabled
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
+import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
-import ui.isTtsEnabled
+import ui.SwitchStateVariables
 import java.io.File
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,8 +50,8 @@ val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
     description = "Play TTS message. The given message has to be written behind the command.",
     handler = { arguments ->
-        if(!isTtsEnabled && TwitchBotConfig.channel != messageEvent.user.name) {
-            sendMessageToTwitchChatAndLogIt(chat, "TTS is disabled ${TwitchBotConfig.commandDisabledEmote1} Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
+        if(isCommandDisabled(SwitchStateVariables.isTtsEnabled.value, messageEvent.user.name)) {
+            sendCommandDisabledMessage("TTS command", chat)
             return@Command
         }
 

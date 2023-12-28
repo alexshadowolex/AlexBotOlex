@@ -1,7 +1,5 @@
 
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -31,20 +29,21 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import ui.app
-import ui.switchInteractionSource
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
@@ -251,16 +250,7 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
     twitchClient.eventManager.onEvent(ChannelGoLiveEvent::class.java) {
         logger.info("Channel went live on twitch")
-        backgroundCoroutineScope.launch {
-            try {
-                val press = PressInteraction.Press(Offset.Zero)
-                switchInteractionSource.emit(press)
-                delay(300.milliseconds)
-                switchInteractionSource.emit(PressInteraction.Release(press))
-            } catch (e: Exception) {
-                logger.error("An exception occurred while turning on all the commands per interaction source. ", e)
-            }
-        }
+        setAllUiSwitches(true)
     }
 
     logger.info("Twitch client started.")
