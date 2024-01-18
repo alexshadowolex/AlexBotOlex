@@ -52,10 +52,12 @@ object SwitchStateVariables {
     lateinit var isFirstLeaderboardEnabled: MutableState<Boolean>
 }
 
+lateinit var messageForDiscord: MutableState<String>
+
 @Composable
 @Preview
 fun app(discordClient: Kord) {
-    var messageForDiscord by remember { mutableStateOf("") }
+    messageForDiscord = remember { mutableStateOf("") }
 
     SwitchStateVariables.isSongRequestEnabled = remember { mutableStateOf(TwitchBotConfig.isSongRequestEnabledByDefault) }
     SwitchStateVariables.isSoundAlertEnabled = remember { mutableStateOf(TwitchBotConfig.isSoundAlertEnabledByDefault) }
@@ -86,9 +88,9 @@ fun app(discordClient: Kord) {
                                     text = "Message For Discord"
                                 )
                             },
-                            value = messageForDiscord,
+                            value = messageForDiscord.value,
                             onValueChange = { value ->
-                                messageForDiscord = value
+                                messageForDiscord.value = value
                             },
                             singleLine = true,
                             modifier = Modifier
@@ -102,8 +104,8 @@ fun app(discordClient: Kord) {
                         Button(
                             onClick = {
                                 CoroutineScope(Dispatchers.IO).launch {
-                                    sendAnnouncementMessage(messageForDiscord, discordClient)
-                                    messageForDiscord = ""
+                                    sendAnnouncementMessage(messageForDiscord.value, discordClient)
+                                    messageForDiscord.value = ""
                                 }
                             },
                             modifier = Modifier

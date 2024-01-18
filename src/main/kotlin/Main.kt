@@ -39,6 +39,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import ui.app
+import ui.messageForDiscord
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -251,6 +252,10 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
     twitchClient.eventManager.onEvent(ChannelGoLiveEvent::class.java) {
         logger.info("Channel went live on twitch")
         setAllUiSwitches(true)
+        backgroundCoroutineScope.launch {
+            sendAnnouncementMessage(messageForDiscord.value, discordClient)
+            messageForDiscord.value = ""
+        }
     }
 
     logger.info("Twitch client started.")
