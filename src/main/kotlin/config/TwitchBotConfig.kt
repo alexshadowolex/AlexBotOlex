@@ -12,6 +12,7 @@ object TwitchBotConfig {
     }
 
     val chatAccountToken = File("data\\tokens\\twitchToken.txt").readText()
+    val voiceRssToken = File("data\\tokens\\voiceRssToken.txt").readText()
     val channel: String = properties.getProperty("channel")
     const val channelAccountId: String = "46425800"
     const val chatAccountId: String = "798323687"

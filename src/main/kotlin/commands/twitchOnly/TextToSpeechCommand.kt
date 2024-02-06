@@ -3,23 +3,22 @@ package commands.twitchOnly
 import backgroundCoroutineScope
 import config.TwitchBotConfig
 import handler.Command
-import httpClient
-import io.ktor.client.call.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.util.*
-import io.ktor.utils.io.jvm.javaio.*
 import isCommandDisabled
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import logger
+import okio.internal.commonToUtf8String
 import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
 import ui.SwitchStateVariables
 import java.io.File
+import java.net.URL
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -45,7 +44,6 @@ private data class TtsQueueEntry(
 
 private val ttsQueue = mutableListOf<TtsQueueEntry>()
 
-@OptIn(InternalAPI::class)
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
     description = "Play TTS message. The given message has to be written behind the command.",
@@ -63,22 +61,58 @@ val textToSpeechCommand = Command(
         val text = arguments.joinToString(" ")
 
         try {
-            logger.info("Playing TTS from message '$text'...")
+            logger.info("Trying to play TTS from message '$text'...")
 
-            val url = httpClient.post("https://streamlabs.com/polly/speak") {
-                contentType(ContentType.Application.Json)
+            val httpClient = HttpClient(CIO) {
+                install(Logging) {
+                    logger = Logger.DEFAULT
+                    level = LogLevel.NONE
+                }
+            }
 
-                setBody(TtsRequest(voice = "Brian", text = text))
-            }.body<TtsResponse>().speakUrl
+            val endpoint = "http://api.voicerss.org/"
+            val errorTextMessageStart = "ERROR:"
+            val currentVariation = listOf(
+                "en-au" to listOf("Zoe", "Isla", "Evie", "Jack"),
+                "en-ca" to listOf("Rose", "Clara", "Emma", "Mason"),
+                "en-gb" to listOf("Alice", "Nancy", "Lily", "Harry"),
+                "en-in" to listOf("Eka", "Jai", "Ajit"),
+                "en-ie" to listOf("Oran"),
+                "en-us" to listOf("Linda", "Amy", "Mary", "John", "Mike")
+            ).random()
 
-            logger.info("Streamlabs returned URL '$url'.")
+            val language = currentVariation.first
+            val voice = currentVariation.second.random()
+            logger.info("Chose random language \"$language\" with voice \"$voice\"")
+
+            val response = httpClient.get(endpoint) {
+                parameter("key", TwitchBotConfig.voiceRssToken)
+                parameter("src", text)
+                parameter("hl", language)
+                parameter("v", voice)
+            }
+
+            // Hard coded cuz the API is a joke
+            val audioUrl = response
+                .toString().substringAfter("[").substringBeforeLast("]")
+                .split(",")[0]
+
+            val audioBytes = URL(audioUrl).readBytes()
+            if(audioBytes.commonToUtf8String().startsWith(errorTextMessageStart)) {
+                sendMessageToTwitchChatAndLogIt(chat, "Something went wrong with getting the TTS audio.")
+                logger.error("Error while getting TTS audio: ${audioBytes.commonToUtf8String()}")
+                return@Command
+            }
 
             withContext(Dispatchers.IO) {
-                val ttsDataFile = File.createTempFile("tts_", ".mp3").apply {
-                    writeBytes(httpClient.get(url).body<HttpResponse>().content.toInputStream().readAllBytes())
+                val ttsDataFile = File.createTempFile("tts_", ".wav").apply {
+                    writeBytes(audioBytes)
                 }
 
-                val ttsSpeechDuration = ProcessBuilder("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", ttsDataFile.absolutePath.replace("\\","\\\\")).start().run {
+                val ttsSpeechDuration = ProcessBuilder(
+                    "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1",
+                    ttsDataFile.absolutePath.replace("\\","\\\\")
+                ).start().run {
                     while (isAlive) {
                         delay(100.milliseconds)
                     }
@@ -93,7 +127,9 @@ val textToSpeechCommand = Command(
                     if (messageEvent.user.name == TwitchBotConfig.channel) {
                         "Playing TTS..."
                     } else {
-                        "Playing TTS, putting user '${messageEvent.user.name}' on ${addedUserCoolDown.toString(DurationUnit.SECONDS, 0)} cooldown."
+                        "Playing TTS, putting user " +
+                        "'${messageEvent.user.name}' " +
+                        "on ${addedUserCoolDown.toString(DurationUnit.SECONDS, 0)} cooldown."
                     }
                 )
 
@@ -111,9 +147,11 @@ val ttsPlayerJob = backgroundCoroutineScope.launch {
     while (isActive) {
         ttsQueue.removeFirstOrNull()?.let { entry ->
             val ttsProcess = withContext(Dispatchers.IO) {
-                ProcessBuilder("ffplay", "-af", "volume=1", "-nodisp", "-autoexit", "-i", entry.file.absolutePath.replace("\\","\\\\")).apply {
-                    inheritIO()
-                }.start().onExit().await()
+                ProcessBuilder(
+                    "ffplay", "-af", "volume=1", "-nodisp", "-autoexit", "-i",
+                    entry.file.absolutePath.replace("\\","\\\\")).apply {
+                        inheritIO()
+                    }.start().onExit().await()
             }
 
             while (ttsProcess!!.isAlive) {

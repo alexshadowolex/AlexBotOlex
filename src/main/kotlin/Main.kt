@@ -24,11 +24,6 @@ import dev.kord.core.Kord
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import handler.*
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,17 +45,6 @@ import kotlin.time.Duration.Companion.seconds
 val logger: org.slf4j.Logger = LoggerFactory.getLogger("Bot")
 
 lateinit var spotifyClient: SpotifyClientApi
-
-val httpClient = HttpClient(CIO) {
-    install(Logging) {
-        logger = Logger.DEFAULT
-        level = LogLevel.INFO
-    }
-
-    install(ContentNegotiation) {
-        json()
-    }
-}
 
 val json = Json {
     prettyPrint = true
