@@ -54,7 +54,7 @@ val soundAlertCommand: Command = Command(
         if(soundAlertFile != null) {
             soundAlertQueue.add(soundAlertFile)
 
-            handleBustinSoundAlert(soundAlertFile, chat)
+            handleSoundAlertReactions(soundAlertFile, chat)
         } else {
             sendMessageToTwitchChatAndLogIt(chat, "Mad bro? Couldn't find a fitting sound alert.")
             tmpUserCoolDown = 5.seconds
@@ -94,26 +94,28 @@ val soundAlertPlayerJob = backgroundCoroutineScope.launch {
     }
 }
 
-private const val BUSTIN_SOUND_ALERT_NAME = "bustin.mp3"
-private suspend fun handleBustinSoundAlert(soundAlertFile: File, chat: TwitchChat) {
-    val bustinSoundAlertFile = File(TwitchBotConfig.soundAlertDirectory + "\\$BUSTIN_SOUND_ALERT_NAME")
-    if(!bustinSoundAlertFile.exists()) {
+private val soundAlertToReactionEmote = mapOf(
+    "bustin.mp3" to "Bustin",
+    "chipi chipi.mp3" to "chipichipi"
+)
+private suspend fun handleSoundAlertReactions(soundAlertFile: File, chat: TwitchChat) {
+    val soundAlertName = soundAlertFile.name
+    if(!soundAlertToReactionEmote.keys.contains(soundAlertName)) {
         return
     }
 
-    if(soundAlertFile == bustinSoundAlertFile) {
-        logger.info("Sound alert bustin was played, issuing bustin!")
-        val bustinEmote = "Bustin "
-        delay(1.5.seconds)
+    val reactionEmote = soundAlertToReactionEmote[soundAlertName]
+    logger.info("Sound alert $soundAlertName was played, issuing $reactionEmote!")
 
-        for (i in 1..6) {
-            val amount = if(i <= 3) {
-                i
-            } else {
-                abs(i - 6)
-            }
-            chat.sendMessage(TwitchBotConfig.channel, bustinEmote.repeat(amount))
-            delay(0.5.seconds)
+    delay(1.5.seconds)
+
+    for (i in 1..6) {
+        val amount = if(i <= 3) {
+            i
+        } else {
+            abs(i - 6)
         }
+        chat.sendMessage(TwitchBotConfig.channel, ("$reactionEmote ").repeat(amount))
+        delay(0.5.seconds)
     }
 }
