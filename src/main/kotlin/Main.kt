@@ -151,6 +151,8 @@ fun setupTwitchBot(discordClient: Kord): TwitchClient {
 
     twitchClient.clientHelper.enableStreamEventListener(TwitchBotConfig.channel)
 
+    startQuoteMessageGetter(twitchClient.chat)
+
     twitchClient.eventManager.onEvent(ChannelMessageEvent::class.java) { messageEvent ->
         val message = messageEvent.message
         if (!message.startsWith(TwitchBotConfig.commandPrefix)) {

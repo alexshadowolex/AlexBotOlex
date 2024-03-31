@@ -51,4 +51,6 @@ object TwitchBotConfig {
     val shrugEmote: String = properties.getProperty("shrug_emote")
     val pepeVibeHardEmote: String = properties.getProperty("pepe_vibe_hard_emote")
     val yikersEmote: String = properties.getProperty("yikers_emote")
+    val quoteMessage: String = properties.getProperty("quote_message")
+    val quoteMessageDelayMinutes: Duration = properties.getProperty("quote_message_delay_minutes").toDouble().minutes
 }

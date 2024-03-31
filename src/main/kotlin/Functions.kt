@@ -83,6 +83,15 @@ fun sendCommandDisabledMessage(messagePrefix: String, chat: TwitchChat) {
             "Now suck my ${TwitchBotConfig.commandDisabledEmote2}")
 }
 
+fun startQuoteMessageGetter(chat: TwitchChat) {
+    backgroundCoroutineScope.launch {
+        while (isActive) {
+            sendMessageToTwitchChatAndLogIt(chat, TwitchBotConfig.quoteMessage)
+            delay(TwitchBotConfig.quoteMessageDelayMinutes)
+        }
+    }
+}
+
 // Spotify Functions
 suspend fun getCurrentSpotifySong(): Track? {
     return try {

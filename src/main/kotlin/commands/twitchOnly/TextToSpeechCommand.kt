@@ -124,11 +124,11 @@ val textToSpeechCommand = Command(
                 addedCommandCoolDown = ttsSpeechDuration
                 sendMessageToTwitchChatAndLogIt(
                     chat,
-                    if (messageEvent.user.name == TwitchBotConfig.channel) {
-                        "Playing TTS..."
+                    "Playing TTS ft. $voice" + if (messageEvent.user.name == TwitchBotConfig.channel) {
+                        ""
                     } else {
-                        "Playing TTS, putting user " +
-                        "'${messageEvent.user.name}' " +
+                        ", putting user " +
+                        "${messageEvent.user.name} " +
                         "on ${addedUserCoolDown.toString(DurationUnit.SECONDS, 0)} cooldown."
                     }
                 )
@@ -148,7 +148,7 @@ val ttsPlayerJob = backgroundCoroutineScope.launch {
         ttsQueue.removeFirstOrNull()?.let { entry ->
             val ttsProcess = withContext(Dispatchers.IO) {
                 ProcessBuilder(
-                    "ffplay", "-af", "volume=1", "-nodisp", "-autoexit", "-i",
+                    "ffplay", "-af", "volume=2", "-nodisp", "-autoexit", "-i",
                     entry.file.absolutePath.replace("\\","\\\\")).apply {
                         inheritIO()
                     }.start().onExit().await()
