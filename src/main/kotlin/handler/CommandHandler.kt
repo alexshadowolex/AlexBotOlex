@@ -40,5 +40,6 @@ val commands = listOf(
     voteSkipCommand,
     songLouderCommand,
     firstCommand,
-    firstLeaderboardCommand
+    firstLeaderboardCommand,
+    coinFlipCommand
 )

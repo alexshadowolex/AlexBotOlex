@@ -345,7 +345,7 @@ private fun getExistingCommandsForSpreadSheet(): List<List<String>> {
     val output = mutableListOf<List<String>>()
     for(command in commands) {
         output.add(listOf(
-            command.names.joinToString("|") { "${TwitchBotConfig.commandPrefix}${it}" },
+            command.names.joinToString(" | ") { "${TwitchBotConfig.commandPrefix}${it}" },
             command.description
         ))
     }

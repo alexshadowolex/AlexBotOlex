@@ -50,6 +50,7 @@ object SwitchStateVariables {
     lateinit var isSendClipEnabled: MutableState<Boolean>
     lateinit var isFirstEnabled: MutableState<Boolean>
     lateinit var isFirstLeaderboardEnabled: MutableState<Boolean>
+    lateinit var isCoinFlipEnabled: MutableState<Boolean>
 }
 
 lateinit var messageForDiscord: MutableState<String>
@@ -71,6 +72,7 @@ fun app(discordClient: Kord) {
     SwitchStateVariables.isSendClipEnabled = remember { mutableStateOf(TwitchBotConfig.isSendClipEnabledByDefault) }
     SwitchStateVariables.isFirstEnabled = remember { mutableStateOf(TwitchBotConfig.isFirstEnabledByDefault) }
     SwitchStateVariables.isFirstLeaderboardEnabled = remember { mutableStateOf(TwitchBotConfig.isFirstLeaderboardEnabled) }
+    SwitchStateVariables.isCoinFlipEnabled = remember { mutableStateOf(TwitchBotConfig.isCoinFlipEnabled) }
 
     MaterialTheme(colors = darkColorPalette) {
         Scaffold {
@@ -423,6 +425,26 @@ fun app(discordClient: Kord) {
                                     checked = SwitchStateVariables.isFirstLeaderboardEnabled.value,
                                     onCheckedChange = {
                                         SwitchStateVariables.isFirstLeaderboardEnabled.value = it
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+
+                            Column (
+                                modifier = Modifier
+                                    .fillMaxWidth(0.25f)
+                                    .padding(end = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Coin Flip Enabled",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                                Switch(
+                                    checked = SwitchStateVariables.isCoinFlipEnabled.value,
+                                    onCheckedChange = {
+                                        SwitchStateVariables.isCoinFlipEnabled.value = it
                                     },
                                     modifier = Modifier
                                         .align(Alignment.CenterHorizontally)
