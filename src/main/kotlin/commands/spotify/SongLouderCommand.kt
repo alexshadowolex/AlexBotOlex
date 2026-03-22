@@ -88,7 +88,10 @@ private suspend fun startVoteController(chat: TwitchChat) {
         val amountYes = currentVotesPerUser.count { it.value == VOTE_OPTIONS.YES }
         val amountNo = currentVotesPerUser.count { it.value == VOTE_OPTIONS.NO }
 
-        val message = if(amountYes + amountNo >= MINIMUM_AMOUNT_VOTES) {
+        val message = if(
+            amountYes + amountNo >= MINIMUM_AMOUNT_VOTES ||
+            currentVotesPerUser.map { it.key.name }.contains(TwitchBotConfig.channel)
+        ) {
             if(amountYes >= amountNo * 1.5) {
                 try {
                     setSpotifyVolume(SpotifyConfig.songLouderIncreasedVolume)
