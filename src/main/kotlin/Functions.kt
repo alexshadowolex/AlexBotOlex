@@ -33,8 +33,6 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
-import kotlinx.datetime.Clock
-import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
 import org.apache.commons.lang.time.DurationFormatUtils
 import ui.SwitchStateVariables
@@ -46,7 +44,9 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaInstant
 
 // Twitch Functions
 fun handleRaidEvent(raidEvent: RaidEvent, twitchClient: TwitchClient) {

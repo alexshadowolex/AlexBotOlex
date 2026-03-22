@@ -11,15 +11,15 @@ import handler.Command
 import isCommandDisabled
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import logger
 import resetSpotifyVolumeToDefault
 import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
 import setSpotifyVolume
 import ui.SwitchStateVariables
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 private val VOTE_OPTIONS = object {
     val YES = "yes"
