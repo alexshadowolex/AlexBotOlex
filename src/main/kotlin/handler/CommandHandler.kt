@@ -29,6 +29,7 @@ val commands = listOf(
     helpCommand,
     songRequestCommand,
     textToSpeechCommand,
+    availableVoicesCommand,
     soundAlertCommand,
     sendClipCommand,
     feedbackCommand,

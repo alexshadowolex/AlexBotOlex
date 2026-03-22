@@ -1,19 +1,25 @@
 package commands.twitchOnly
 
 import backgroundCoroutineScope
+import config.CacheConfig
 import config.TwitchBotConfig
+import getVoicesFromTtsMonsterApi
 import handler.Command
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import isCommandDisabled
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import logger
-import okio.internal.commonToUtf8String
 import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
 import ui.SwitchStateVariables
@@ -25,18 +31,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
-@Serializable
-private data class TtsRequest(
-    val voice: String,
-    val text: String
-)
-
-@Serializable
-private data class TtsResponse(
-    val success: Boolean,
-    @SerialName("speak_url") val speakUrl: String
-)
-
 private data class TtsQueueEntry(
     val file: File,
     val duration: Duration
@@ -46,7 +40,7 @@ private val ttsQueue = mutableListOf<TtsQueueEntry>()
 
 val textToSpeechCommand = Command(
     names = listOf("tts", "texttospeech"),
-    description = "Play TTS message. The given message has to be written behind the command.",
+    description = "Play TTS message. If you want to use a special voice type the name in front followed by \":\", like this: \"#tts <voice>: <message>\"",
     handler = { arguments ->
         if(isCommandDisabled(SwitchStateVariables.isTtsEnabled.value, messageEvent.user.name)) {
             sendCommandDisabledMessage("TTS command", chat)
@@ -63,46 +57,56 @@ val textToSpeechCommand = Command(
         try {
             logger.info("Trying to play TTS from message '$text'...")
 
+            var voices = CacheConfig.ttsVoices
+            if(voices == null || voices.isEmpty()) {
+                voices = getVoicesFromTtsMonsterApi(chat)
+            }
+
             val httpClient = HttpClient(CIO) {
                 install(Logging) {
                     logger = Logger.DEFAULT
                     level = LogLevel.NONE
                 }
+
+                install(ContentNegotiation) {
+                    json()
+                }
             }
 
-            val endpoint = "http://api.voicerss.org/"
-            val errorTextMessageStart = "ERROR:"
-            val currentVariation = listOf(
-                "en-au" to listOf("Zoe", "Isla", "Evie", "Jack"),
-                "en-ca" to listOf("Rose", "Clara", "Emma", "Mason"),
-                "en-gb" to listOf("Alice", "Nancy", "Lily", "Harry"),
-                "en-in" to listOf("Eka", "Jai", "Ajit"),
-                "en-ie" to listOf("Oran"),
-                "en-us" to listOf("Linda", "Amy", "Mary", "John", "Mike")
-            ).random()
-
-            val language = currentVariation.first
-            val voice = currentVariation.second.random()
-            logger.info("Chose random language \"$language\" with voice \"$voice\"")
-
-            val response = httpClient.get(endpoint) {
-                parameter("key", TwitchBotConfig.voiceRssToken)
-                parameter("src", text)
-                parameter("hl", language)
-                parameter("v", voice)
+            val json = Json {
+                ignoreUnknownKeys = true
             }
 
-            // Hard coded cuz the API is a joke
-            val audioUrl = response
-                .toString().substringAfter("[").substringBeforeLast("]")
-                .split(",")[0]
+            val defaultVoice = "Epic Narrator"
 
-            val audioBytes = URL(audioUrl).readBytes()
-            if(audioBytes.commonToUtf8String().startsWith(errorTextMessageStart)) {
+            var voiceName = defaultVoice
+            var ttsText = text
+            if(text.indexOf(":") >= 0) {
+                val possibleVoiceName = text.substringBefore(":")
+                val entry = voices!!.find { it.name == possibleVoiceName }
+                if(entry != null) {
+                    voiceName = possibleVoiceName
+                    ttsText = text.replace("$voiceName:", "")
+                }
+            }
+
+            val voiceId = voices!!.find { it.name == voiceName }!!.voiceId
+
+            val endpoint = "https://api.console.tts.monster/generate"
+            val httpResponse = httpClient.post(endpoint) {
+                header("Authorization", TwitchBotConfig.ttsMonsterToken)
+                contentType(ContentType.Application.Json)
+                setBody(TtsMonsterGenerateBody(voiceId, ttsText))
+            }
+
+            if (httpResponse.status != HttpStatusCode.OK) {
                 sendMessageToTwitchChatAndLogIt(chat, "Something went wrong with getting the TTS audio.")
-                logger.error("Error while getting TTS audio: ${audioBytes.commonToUtf8String()}")
+                logger.error("Error while getting TTS audio: ${httpResponse.bodyAsText()}")
                 return@Command
             }
+
+            val response = json.decodeFromString<TtsMonsterGenerateResponse>(httpResponse.bodyAsText())
+            val audioBytes = URL(response.url).readBytes()
 
             withContext(Dispatchers.IO) {
                 val ttsDataFile = File.createTempFile("tts_", ".wav").apply {
@@ -124,7 +128,7 @@ val textToSpeechCommand = Command(
                 addedCommandCoolDown = ttsSpeechDuration
                 sendMessageToTwitchChatAndLogIt(
                     chat,
-                    "Playing TTS ft. $voice" + if (messageEvent.user.name == TwitchBotConfig.channel) {
+                    "Playing TTS ft. $voiceName" + if (messageEvent.user.name == TwitchBotConfig.channel) {
                         ""
                     } else {
                         ", putting user " +
@@ -140,6 +144,22 @@ val textToSpeechCommand = Command(
             logger.error("Unable to play TTS:", e)
         }
     }
+)
+
+
+@Serializable
+private data class TtsMonsterGenerateBody(
+    @SerialName("voice_id") val voiceId: String,
+    val message: String,
+    @SerialName("return_usage") val returnUsage: Boolean = false
+)
+
+
+@Serializable
+private data class TtsMonsterGenerateResponse(
+    val status: Int,
+    val url: String,
+    val characterUsage: Int? = null
 )
 
 @Suppress("unused")

@@ -1,8 +1,6 @@
 
 import dev.kord.common.entity.Snowflake
 import java.io.OutputStream
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 class MultiOutputStream(private vararg val streams: OutputStream) : OutputStream() {
     override fun close() = streams.forEach(OutputStream::close)
@@ -39,3 +37,18 @@ fun String.pluralForm(number: Int) = when {
     equals("is") -> "are"
     else -> "${this}s"
 }
+
+/**
+ * Wraps the string in quotation marks if it is not empty.
+ *
+ * Empty strings are returned unchanged.
+ *
+ * @receiver the original string
+ * @return the quoted string, or the original string if empty
+ */
+fun String.addQuotationMarks() =
+    if(this.isNotEmpty()) {
+        "\"$this\""
+    } else {
+        this
+    }

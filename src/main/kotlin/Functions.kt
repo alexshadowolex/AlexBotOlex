@@ -13,6 +13,9 @@ import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.ValueRange
+import commands.twitchOnly.TtsMonsterVoice
+import commands.twitchOnly.TtsMonsterVoicesResponse
+import config.CacheConfig
 import config.GoogleSpreadSheetConfig
 import config.SpotifyConfig
 import config.TwitchBotConfig
@@ -23,6 +26,13 @@ import dev.kord.core.supplier.EntitySupplyStrategy
 import handler.ClipPlayerHandler
 import handler.CommandHandlerScope
 import handler.commands
+import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
@@ -33,7 +43,9 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.Json
 import org.apache.commons.lang.time.DurationFormatUtils
 import ui.SwitchStateVariables
 import ui.clipOverlayPage
@@ -44,6 +56,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
+import javax.swing.JOptionPane
+import kotlin.system.exitProcess
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaInstant
@@ -59,12 +73,27 @@ fun handleRaidEvent(raidEvent: RaidEvent, twitchClient: TwitchClient) {
     sendMessageToTwitchChatAndLogIt(raidEvent.twitchChat, "!so $raiderName")
 
     try {
-        twitchClient.helix.sendShoutout(
+        val response = twitchClient.helix.sendShoutout(
             TwitchBotConfig.chatAccountToken,
             TwitchBotConfig.channelAccountId,
             raiderId,
             TwitchBotConfig.chatAccountId
         )
+
+        logger.error("response.executionException.stackTrace: ${response.executionException.stackTrace}")
+        logger.error("response.executionException.cause: ${response.executionException.cause}")
+        logger.error("response.executionException.message: ${response.executionException.message}")
+        logger.error("response.executionTimeInMilliseconds: ${response.executionTimeInMilliseconds}")
+        logger.error("response.failedExecutionException.stackTrace: ${response.failedExecutionException.stackTrace}")
+        logger.error("response.failedExecutionException.cause: ${response.failedExecutionException.cause}")
+        logger.error("response.failedExecutionException.message: ${response.failedExecutionException.message}")
+        logger.error("response.isExecutedInThread: ${response.isExecutedInThread}")
+        logger.error("response.isExecutionComplete: ${response.isExecutionComplete}")
+        logger.error("response.isFailedExecution: ${response.isFailedExecution}")
+        logger.error("response.isSuccessfulExecution: ${response.isSuccessfulExecution}")
+        logger.error("response.isResponseRejected: ${response.isResponseRejected}")
+        logger.error("response.isResponseTimedOut: ${response.isResponseTimedOut}")
+        logger.error("response.metrics: ${response.metrics}")
 
         logger.info("Issued Shoutout successfully")
     } catch (e: Exception) {
@@ -398,7 +427,7 @@ private fun updateSpreadSheetList(sheetService: Sheets, localValues: List<List<S
             ValueRange().setValues(
                 listOf(
                     listOf(
-                        Clock.System.now().toLocalDateTime(timeZone = kotlinx.datetime.TimeZone.currentSystemDefault())
+                        Clock.System.now().toLocalDateTime(timeZone = TimeZone.currentSystemDefault())
                             .toString()
                     )
                 )
@@ -491,8 +520,29 @@ fun setupLogging() {
 }
 
 fun sendMessageToTwitchChatAndLogIt(chat: TwitchChat, message: String) {
-    chat.sendMessage(TwitchBotConfig.channel, message)
-    logger.info("Sent Twitch chat message: $message")
+
+    val parts = mutableListOf<String>()
+    var current = StringBuilder()
+
+    for (word in message.split(" ")) {
+        val next = if (current.isEmpty()) word else " $word"
+
+        if (current.length + next.length > 500) {
+            parts.add(current.toString())
+            current = StringBuilder(word)
+        } else {
+            current.append(next)
+        }
+    }
+
+    if (current.isNotEmpty()) {
+        parts.add(current.toString())
+    }
+
+    parts.forEach {
+        chat.sendMessage(TwitchBotConfig.channel, it)
+        logger.info("Sent Twitch chat message: $it")
+    }
 }
 
 
@@ -510,4 +560,108 @@ fun setAllUiSwitches(value: Boolean) {
     SwitchStateVariables.isSendClipEnabled.value = value
     SwitchStateVariables.isFirstEnabled.value = value
     SwitchStateVariables.isFirstLeaderboardEnabled.value = value
+}
+
+
+/**
+ * Displays an error message in a modal dialog window.
+ *
+ * @param message the content of the error message
+ * @param title the title of the dialog window
+ */
+fun showErrorMessageWindow(message: String, title: String) {
+    JOptionPane.showMessageDialog(
+        null,
+        "$message\nCheck logs for more information",
+        title,
+        JOptionPane.ERROR_MESSAGE
+    )
+}
+
+
+// General Functions
+/**
+ * Reads a property value from the given [Properties] object.
+ *
+ * If the property cannot be read because it is not existing and the flag `setPropertyIfNotExisting`
+ * is set to true, the property will be created with an empty string.
+ * If not, displays an error dialog and terminates the application.
+ *
+ * @param properties the [Properties] instance to read from
+ * @param propertyName the key of the property
+ * @param propertiesFileRelativePath the relative path of the properties file (used in error messages)
+ * @param setPropertyIfNotExisting if true, the property is created with an empty value when it does not exist;
+ * otherwise, the application logs an error and terminates.
+ * @return the raw value of the property as a [String]
+ */
+fun getPropertyValue(
+    properties: Properties, propertyName: String,
+    propertiesFileRelativePath: String,
+    setPropertyIfNotExisting: Boolean
+): String {
+    return try {
+        properties.getProperty(propertyName)
+    } catch (e: Exception) {
+        if(setPropertyIfNotExisting) {
+            val emptyString = ""
+            properties.setProperty(propertyName, emptyString)
+            logger.info("Created property $propertyName in file $propertiesFileRelativePath with empty value.")
+            emptyString
+        } else {
+            logger.error(
+                "Exception occurred while reading property $propertyName in file $propertiesFileRelativePath: ",
+                e
+            )
+            showErrorMessageWindow(
+                message = "Error while reading value of property ${propertyName.addQuotationMarks()} " +
+                        "in file $propertiesFileRelativePath.\n" +
+                        "Try running the latest version of UpdateProperties.jar " +
+                        "or fix it manually by adding it to the mentioned file.",
+                title = "Error while reading properties"
+            )
+            logger.error("test")
+            exitProcess(-1)
+        }
+    }
+}
+
+suspend fun getVoicesFromTtsMonsterApi(chat: TwitchChat): List<TtsMonsterVoice>? {
+    var voices: List<TtsMonsterVoice>? = null
+    try {
+        val httpClient = HttpClient(io.ktor.client.engine.cio.CIO) {
+            install(Logging) {
+                logger = Logger.DEFAULT
+                level = LogLevel.NONE
+            }
+
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+
+        val json = Json {
+            ignoreUnknownKeys = true
+        }
+
+        val endpoint = "https://api.console.tts.monster/voices"
+        val httpResponse = httpClient.post(endpoint) {
+            header("Authorization", TwitchBotConfig.ttsMonsterToken)
+            contentType(ContentType.Application.Json)
+        }
+
+        if (httpResponse.status != HttpStatusCode.OK) {
+            sendMessageToTwitchChatAndLogIt(chat, "Something went wrong with getting the TTS voices.")
+            logger.error("Error while getting TTS voices: ${httpResponse.bodyAsText()}")
+            return null
+        }
+
+        voices = json.decodeFromString<TtsMonsterVoicesResponse>(httpResponse.bodyAsText()).voices
+        CacheConfig.ttsVoices = voices
+        logger.info("Refreshed voices cache successfully")
+    } catch (e: Exception) {
+        sendMessageToTwitchChatAndLogIt(chat, "Unable to get TTS voices.")
+        logger.error("Unable to get TTS voices:", e)
+    }
+
+    return voices
 }
