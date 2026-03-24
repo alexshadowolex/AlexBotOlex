@@ -28,7 +28,7 @@ dependencies {
 
     implementation(compose.desktop.currentOs)
 
-    implementation("org.slf4j:slf4j-simple:2.0.5")
+    implementation("org.slf4j:slf4j-simple:2.0.17")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")

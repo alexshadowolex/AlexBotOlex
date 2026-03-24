@@ -82,15 +82,18 @@ val textToSpeechCommand = Command(
             var voiceName = defaultVoice
             var ttsText = text
             if(text.indexOf(":") >= 0) {
-                val possibleVoiceName = text.substringBefore(":")
-                val entry = voices!!.find { it.name == possibleVoiceName }
+                val possibleVoiceName = text.substringBefore(":").trim()
+                val entry = voices!!.find { it.name.lowercase() == possibleVoiceName.lowercase() }
                 if(entry != null) {
                     voiceName = possibleVoiceName
-                    ttsText = text.replace("$voiceName:", "")
+                    ttsText = text
+                        .replace(voiceName, "")
+                        .replaceFirst(":", "")
+                        .trim()
                 }
             }
 
-            val voiceId = voices!!.find { it.name == voiceName }!!.voiceId
+            val voiceId = voices!!.find { it.name.lowercase() == voiceName.lowercase() }!!.voiceId
 
             val endpoint = "https://api.console.tts.monster/generate"
             val httpResponse = httpClient.post(endpoint) {
