@@ -58,6 +58,8 @@ dependencies {
     implementation("com.google.oauth-client:google-oauth-client-jetty:1.34.1")
     implementation("com.google.apis:google-api-services-sheets:v4-rev20230227-2.0.0")
 
+    implementation("me.xdrop:fuzzywuzzy:1.4.0")
+
     implementation("dev.kord:kord-core:0.18.1")
 
     implementation(kotlin("script-runtime"))

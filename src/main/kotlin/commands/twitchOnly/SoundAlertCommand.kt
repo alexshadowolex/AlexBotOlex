@@ -8,11 +8,12 @@ import handler.Command
 import isCommandDisabled
 import kotlinx.coroutines.*
 import logger
-import org.apache.commons.text.similarity.LevenshteinDistance
+import me.xdrop.fuzzywuzzy.FuzzySearch
 import sendCommandDisabledMessage
 import sendMessageToTwitchChatAndLogIt
 import ui.SwitchStateVariables
 import java.io.File
+import java.util.*
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 
@@ -37,18 +38,18 @@ val soundAlertCommand: Command = Command(
 
         var tmpUserCoolDown = TwitchBotConfig.defaultUserCoolDown
         var tmpCommandCoolDown = TwitchBotConfig.defaultCommandCoolDown
+        val soundAlertFilesList = soundAlertDirectory.listFiles()!!
+            .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
 
         val soundAlertFile = if (query.isEmpty()) {
-            soundAlertDirectory.listFiles()!!
-                .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
-                .random()
+            soundAlertFilesList.random()
         } else {
-            soundAlertDirectory.listFiles()!!
-                .filter { it.extension in TwitchBotConfig.allowedSoundFiles }
-                .map { it to LevenshteinDistance.getDefaultInstance().apply(it.nameWithoutExtension.lowercase(), query) }
-                .minByOrNull { (_, levenshteinDistance) -> levenshteinDistance }
-                ?.takeIf { (_, levenshteinDistance) -> levenshteinDistance < TwitchBotConfig.levenshteinThreshold }
-                ?.first
+            soundAlertFilesList.find {
+                it.nameWithoutExtension == findSoundAlert(
+                    soundAlertFilesList.map { args -> args.nameWithoutExtension },
+                    query
+                )
+            }
         }
 
         if(soundAlertFile != null) {
@@ -64,6 +65,117 @@ val soundAlertCommand: Command = Command(
         addedCommandCoolDown = tmpCommandCoolDown
     }
 )
+
+
+private const val MIN_TOKEN_SIMILARITY = 90
+private const val MIN_TOKEN_SET_SCORE = 50
+private const val MIN_FINAL_SCORE = 70.0
+
+private fun findSoundAlert(
+    soundAlertList: List<String>,
+    query: String
+): String? {
+
+    val normalizedQuery = query.lowercase(Locale.getDefault())
+    val inputTokens = tokenize(normalizedQuery)
+
+    if (inputTokens.isEmpty()) {
+        return null
+    }
+
+    var bestMatch: String? = null
+    var bestScore = Double.MIN_VALUE
+
+    for (soundAlert in soundAlertList) {
+
+        val normalizedAlert = soundAlert.lowercase(Locale.getDefault())
+        val alertTokens = tokenize(normalizedAlert)
+
+        val tokenSetScore = FuzzySearch.tokenSetRatio(
+            normalizedQuery,
+            normalizedAlert
+        )
+
+        var matchedTokens = 0
+        var similaritySum = 0
+
+        for (inputToken in inputTokens) {
+
+            val bestSimilarity = alertTokens.maxOfOrNull { alertToken ->
+
+                val lengthRatio =
+                    minOf(inputToken.length, alertToken.length).toDouble() /
+                            maxOf(inputToken.length, alertToken.length)
+
+                if (lengthRatio < 0.55) {
+                    return@maxOfOrNull 0
+                }
+
+                if (commonCharacterRatio(inputToken, alertToken) < 0.45) {
+                    return@maxOfOrNull 0
+                }
+
+                if (kotlin.math.abs(inputToken.length - alertToken.length) <= 2) {
+                    FuzzySearch.ratio(inputToken, alertToken)
+                } else {
+                    FuzzySearch.partialRatio(inputToken, alertToken)
+                }
+
+            } ?: 0
+
+            if (bestSimilarity >= MIN_TOKEN_SIMILARITY) {
+                matchedTokens++
+                similaritySum += bestSimilarity
+            }
+        }
+
+        if (matchedTokens == 0 && tokenSetScore < MIN_TOKEN_SET_SCORE) {
+            continue
+        }
+
+        val coverage = matchedTokens.toDouble() / inputTokens.size
+
+        val averageSimilarity =
+            if (matchedTokens == 0) {
+                0.0
+            } else {
+                similaritySum.toDouble() / matchedTokens
+            }
+
+        val score =
+            tokenSetScore * 0.35 +
+            averageSimilarity * 0.25 +
+            coverage * 100 * 0.40
+
+        if (score > bestScore) {
+            bestScore = score
+            bestMatch = soundAlert
+        }
+    }
+
+    return if (bestScore >= MIN_FINAL_SCORE) {
+        bestMatch
+    } else {
+        null
+    }
+}
+
+private fun tokenize(input: String): List<String> {
+    return input
+        .lowercase(Locale.getDefault())
+        .split(Regex("\\W+"))
+        .filter { it.isNotBlank() }
+}
+
+private fun commonCharacterRatio(a: String, b: String): Double {
+    val setA = a.toSet()
+    val setB = b.toSet()
+
+    val common = setA.intersect(setB).size
+    val max = maxOf(setA.size, setB.size)
+
+    return common.toDouble() / max
+}
 
 @Suppress("unused")
 val soundAlertPlayerJob = backgroundCoroutineScope.launch {
